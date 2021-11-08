@@ -1867,19 +1867,303 @@ hello.hi() # Hi everyone, I love lsgogroup!
 hi() # NameError: name 'hi' is not defined
 ```
 
-
 ## 导入模块
+创建一个模块 TemperatureConversion.py
+```python
+# TemperatureConversion.py
+def c2f(cel):
+	fah = cel * 1.8 + 32
+	return fah
+
+def f2c(fah):
+	cel = (fah - 32) / 1.8
+	return cel
+```
+
+ 第一种：import 模块名
+ ```python
+import TemperatureConversion
+
+print('32摄氏度 = %.2f华氏度' % TemperatureConversion.c2f(32))
+print('99华氏度 = %.2f摄氏度' % TemperatureConversion.f2c(99))
+# 32摄氏度 = 89.60华氏度
+# 99华氏度 = 37.22摄氏度
+ ```
+ 
+第二种：from 模块名 import 函数名
+```python
+from TemperatureConversion import c2f, f2c
+
+print('32摄氏度 = %.2f华氏度' % c2f(32))
+print('99华氏度 = %.2f摄氏度' % f2c(99))
+# 32摄氏度 = 89.60华氏度
+# 99华氏度 = 37.22摄氏度
+```
+
+下面的方式不推荐
+```python
+from TemperatureConversion import *
+
+print('32摄氏度 = %.2f华氏度' % c2f(32))
+print('99华氏度 = %.2f摄氏度' % f2c(99))
+# 32摄氏度 = 89.60华氏度
+# 99华氏度 = 37.22摄氏度
+```
+
+第三种：import 模块名 as 新名字
+```python
+import TemperatureConversion as tc
+
+print('32摄氏度 = %.2f华氏度' % tc.c2f(32))
+print('99华氏度 = %.2f摄氏度' % tc.f2c(99))
+# 32摄氏度 = 89.60华氏度
+# 99华氏度 = 37.22摄氏度
+```
 
 ## if __name__ == '__main__'
+对于很多编程语言来说，程序都必须要有一个入口，而 Python 则不同，它属于脚本语言，不像编译型语言那样先将程序编译成二进制再运行，而是动态的逐行解释运行。也就是从脚本第一行开始运行，没有统一的入口。
+
+假设我们有一个 const.py 文件，内容如下：
+```python
+PI = 3.14
+
+def main():
+	print("PI:", PI)
+
+main()
+# PI: 3.14
+```
+
+现在，我们写一个用于计算圆面积的 area.py 文件，`area.py`文件需要用到`const.py`文件中的 PI 变量。从`const.py`中，我们把 PI 变量导入`area.py`：
+```python
+from const import PI
+
+def calc_round_area(radius):
+ 	return PI * (radius ** 2)
+	
+def main():
+ 	print("round area: ", calc_round_area(2))
+
+main()
+'''
+PI: 3.14
+round area: 12.56
+'''
+```
+
+我们看到`const.py`中的 main 函数也被运行了，实际上我们不希望它被运行，因为`const.py`提供的 main 函数只是为了测试常量定义。这时`if __name__ == '__main__'`派上了用场，我们把`const.py`改一下，添加`if __name__ == "__main__"`：
+```python
+PI = 3.14
+
+def main():
+ 	print("PI:", PI)
+	
+if __name__ == "__main__":
+ 	main()
+```
+
+运行 const.py，输出如下：
+```python
+PI: 3.14
+```
+
+运行 area.py，输出如下：
+```python
+round area: 12.56
+```
+
+`__name__` ：是内置变量，可用于表示当前模块的名字。
+```python
+import const
+
+print(__name__)
+# __main__
+
+print(const.__name__)
+# const
+```
+
+由此我们可知：如果一个`.py`文件（模块）被直接运行时，其`__name__`值为`__main__`，即模块名为`__main__`。所以，`if __name__ =='__main__'`的意思是：当`.py`文件被直接运行时，`if __name__ == '__main__'`之下的代码块将被运行；当`.py`文件以模块形式被导入时，`if __name__ == '__main__'`之下的代码块不被运行。
 
 ## 搜索路径
+当解释器遇到 import 语句，如果模块在当前的搜索路径就会被导入。
+```python
+import sys
+print(sys.path)
+
+# ['C:\\ProgramData\\Anaconda3\\DLLs', 'C:\\ProgramData\\Anaconda3\\lib', 'C:\\ProgramData\\Anaconda3', 'C:\\ProgramData\\Anaconda3\\lib\\site-packages',...]
+```
+
+我们使用 import 语句的时候，Python 解释器是怎样找到对应的文件的呢？
+这就涉及到 Python 的搜索路径，搜索路径是由一系列目录名组成的，Python 解释器就依次从这些目录中去寻找所引入的模块。
+这看起来很像环境变量，事实上，也可以通过定义环境变量的方式来确定搜索路径。
+搜索路径是在 Python 编译或安装的时候确定的，安装新的库应该也会修改。搜索路径被存储在 sys 模块中的 path 变量中。
 
 ## 包（package）
+包是一种管理 Python 模块命名空间的形式，采用"点模块名称"。
+创建包分为三个步骤：
+1. 创建一个文件夹，用于存放相关的模块，文件夹的名字即包的名字。
+2. 在文件夹中创建一个 __init__.py 的模块文件，内容可以为空。
+3. 将相关的模块放入文件夹中。
 
+不妨假设你想设计一套统一处理声音文件和数据的模块（或者称之为一个"包"）。
+现存很多种不同的音频文件格式（基本上都是通过后缀名区分的，例如： .wav，.aiff，.au），所以你需要有一组不断增加的模块，用来在不同的格式之间转换。
+并且针对这些音频数据，还有很多不同的操作（比如混音，添加回声，增加均衡器功能，创建人造立体声效果），所以你还需要一组怎么也写不完的模块来处理这些操作。
+这里给出了一种可能的包结构（在分层的文件系统中）:
+```python
+sound/ 顶层包
+ 	__init__.py 初始化 sound 包
+ 	formats/ 文件格式转换子包
+		__init__.py
+		wavread.py
+		wavwrite.py
+		aiffread.py
+		aiffwrite.py
+		auread.py
+		auwrite.py
+ 		...
+	effects/ 声音效果子包
+		__init__.py
+		echo.py
+		surround.py
+		reverse.py
+		...
+	filters/ filters 子包
+		__init__.py
+		equalizer.py
+		vocoder.py
+		karaoke.py
+		...
+```
+
+在导入一个包的时候，Python 会根据 sys.path 中的目录来寻找这个包中包含的子目录。
+目录只有包含一个叫做 __init__.py 的文件才会被认作是一个包，最简单的情况，放一个空的 __init__.py 就可以了。
+
+导入子模块 sound.effects.echo, 他必须使用全名去访问:
+```python
+import sound.effects.echo
+
+sound.effects.echo.echofilter(input, output, delay=0.7, atten=4)
+```
+同样会导入子模块: echo，并且他不需要那些冗长的前缀:
+```python
+from sound.effects import echo
+
+echo.echofilter(input, output, delay=0.7, atten=4)
+```
+这种方法会导入子模块: echo，并且可以直接使用他的 echofilter() 函数:
+```python
+from sound.effects.echo import echofilter
+
+echofilter(input, output, delay=0.7, atten=4)
+```
+注意当使用`from package import item`这种形式的时候，对应的`item`既可以是包里面的`子模块（子包）`，或者包里面定义的其他名称，比如函数，类或者变量。
+
+设想一下，如果我们使用 `from sound.effects import *` 会发生什么？
+Python 会进入文件系统，找到这个包里面所有的子模块，一个一个的把它们都导入进来。
+导入语句遵循如下规则：如果包定义文件 `__init__.py` 存在一个叫做 `__all__` 的列表变量，那么在使用 `from package import *` 的时候就把这个列表中的所有名字作为包内容导入。
+
+这里有一个例子，在 `sounds/effects/__init__.py` 中包含如下代码：
+```python
+__all__ = ["echo", "surround", "reverse"]
+```
+这表示当你使用 `from sound.effects import *` 这种用法时，你只会导入包里面这三个子模块。
+如果 `__all__ `真的没有定义，那么使用 `from sound.effects import *` 这种语法的时候，就不会导入包 `sound.effects` 里的任何子模块。他只是把包 `sound.effects` 和它里面定义的所有内容导入进来（可能运行 `__init__.py` 里定义的初始化代码）。
+
+这会把 `__init__.py` 里面定义的所有名字导入进来。并且他不会破坏掉我们在这句话之前导入的所有明确指定的模块。
+```python
+import sound.effects.echo
+import sound.effects.surround
+from sound.effects import *
+```
+这个例子中，在执行 `from...import` 前，包 `sound.effects` 中的 `echo` 和 `surround` 模块都被导入到当前的命名空间中了。
+
+通常我们并不主张使用 `*` 这种方法来导入模块，因为这种方法经常会导致代码的可读性降低。
 
 # datatime 模块
+datetime 是 Python 中处理日期的标准模块，它提供了 4 种对日期和时间进行处理的类：datetime、date、time 和 timedelta。
 
 ## datatime 类
+```python
+class datetime(date):
+	def __init__(self, year, month, day, hour, minute, second, microsecond, tzinfo)
+		pass	
+	def now(cls, tz=None):
+		pass
+	def timestamp(self):
+		pass
+	def fromtimestamp(cls, t, tz=None):
+		pass
+	def date(self):
+		pass
+	def time(self):
+		pass
+	def year(self):
+		pass
+	def month(self):
+		pass
+	def day(self):
+		pass
+	def hour(self):
+		pass
+	def minute(self):
+		pass
+	def second(self):
+		pass
+	def isoweekday(self):
+		pass
+	def strftime(self, fmt):
+		pass
+	def combine(cls, date, time, tzinfo=True):
+		pass
+```
+
+1. `datetime.now(tz=None) `获取当前的日期时间，输出顺序为：年、月、日、时、分、秒、微秒。
+2. `datetime.timestamp()` 获取以 1970年1月1日为起点记录的秒数。
+3. `datetime.fromtimestamp(tz=None)` 使用 unixtimestamp 创建一个 datetime。
+
+如何创建一个 datetime 对象？
+```python
+import datetime
+
+dt = datetime.datetime(year=2020, month=6, day=25, hour=11, minute=23, second=59)
+print(dt) # 2020-06-25 11:23:59
+print(dt.timestamp()) # 1593055439.0
+
+dt = datetime.datetime.fromtimestamp(1593055439.0)
+print(dt) # 2020-06-25 11:23:59
+print(type(dt)) # <class 'datetime.datetime'>
+
+dt = datetime.datetime.now()
+print(dt) # 2020-06-25 11:11:03.877853
+print(type(dt)) # <class 'datetime.datetime'>
+```
+
+1. `datetime.strftime(fmt)` 格式化 datetime 对象。
+|符号 | 说明|
+| ---- | ---- |
+|%a | 本地简化星期名称（如星期一，返回 Mon）|
+|%A | 本地完整星期名称（如星期一，返回 Monday）|
+|%b | 本地简化的月份名称（如一月，返回 Jan）|
+|%B | 本地完整的月份名称（如一月，返回 January）|
+|%c | 本地相应的日期表示和时间表示 |
+|%d | 月内中的一天（0-31）|
+|%H | 24小时制小时数（0-23）|
+|%I | 12小时制小时数（01-12）|
+|%j | 年内的一天（001-366）|
+|%m | 月份（01-12）|
+|%M | 分钟数（00-59）|
+|%p | 本地A.M.或P.M.的等价符|
+|%S | 秒（00-59）|
+|%U | 一年中的星期数（00-53）星期天为星期的开始|
+|%w | 星期（0-6），星期天为星期的开始|
+|%W | 一年中的星期数（00-53）星期一为星期的开始|
+|%x | 本地相应的日期表示|
+|%X | 本地相应的时间表示|
+|%y | 两位数的年份表示（00-99）|
+|%Y | 四位数的年份表示（0000-9999）|
+|%Z | 当前时区的名称（如果是本地时间，返回空字符串）|
+|%% | %号本身|
 
 ## data 类
 
