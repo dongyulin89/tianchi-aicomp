@@ -2140,8 +2140,9 @@ print(type(dt)) # <class 'datetime.datetime'>
 ```
 
 1. `datetime.strftime(fmt)` 格式化 datetime 对象。
+2. 
 |符号 | 说明|
-| ---- | ---- |
+| --- | --- |
 |%a | 本地简化星期名称（如星期一，返回 Mon）|
 |%A | 本地完整星期名称（如星期一，返回 Monday）|
 |%b | 本地简化的月份名称（如一月，返回 Jan）|
@@ -2165,20 +2166,592 @@ print(type(dt)) # <class 'datetime.datetime'>
 |%Z | 当前时区的名称（如果是本地时间，返回空字符串）|
 |%% | %号本身|
 
+如何将 datetime 对象转换为任何格式的日期？
+```python
+import datetime
+
+dt = datetime.datetime(year=2020, month=6, day=25, hour=11, minute=51, second=49)
+s = dt.strftime("'%Y/%m/%d %H:%M:%S")
+print(s) # '2020/06/25 11:51:49
+
+s = dt.strftime('%d %B, %Y, %A')
+print(s) # 25 June, 2020, Thursday
+```
+
+1. datetime.date() Return the date part.
+2. datetime.time() Return the time part, with tzinfo None.
+3. datetime.year 年
+4. datetime.month 月
+5. datetime.day 日
+6. datetime.hour 小时
+7. datetime.minute 分钟
+8. datetime.second 秒
+9. datetime.isoweekday 星期几
+
+datetime 对象包含很多与日期时间相关的实用功能。
+```python
+import datetime
+
+dt = datetime.datetime(year=2020, month=6, day=25, hour=11, minute=51, second=49)
+print(dt.date()) # 2020-06-25
+print(type(dt.date())) # <class 'datetime.date'>
+print(dt.time()) # 11:51:49
+print(type(dt.time())) # <class 'datetime.time'>
+print(dt.year) # 2020
+print(dt.month) # 6
+print(dt.day) # 25
+print(dt.hour) # 11
+print(dt.minute) # 51
+print(dt.second) # 49
+print(dt.isoweekday()) # 4
+```
+
+在处理含有字符串日期的数据集或表格时，我们需要一种自动解析字符串的方法，无论它是什么格式的，都可以将其转化为 datetime 对象。这时，就要使用到 dateutil 中的 parser 模块。
+1. `parser.parse(timestr, parserinfo=None, **kwargs)`
+如何在 python 中将字符串解析为 datetime对象？
+```python
+from dateutil import parser
+
+s = '2020-06-25'
+dt = parser.parse(s)
+print(dt) # 2020-06-25 00:00:00
+print(type(dt)) # <class 'datetime.datetime'>
+
+s = 'March 31, 2010, 10:51pm'
+dt = parser.parse(s)
+print(dt) # 2010-03-31 22:51:00
+print(type(dt)) # <class 'datetime.datetime'>
+```
+
 ## data 类
+```python
+class date:
+	def __init__(self, year, month, day):
+		pass
+	def today(cls):
+	p	ass
+```
+
+如何在 Python 中获取当前日期和时间？
+```python
+import datetime
+
+d = datetime.date(2020, 6, 25)
+print(d) # 2020-06-25
+print(type(d)) # <class 'datetime.date'>
+
+d = datetime.date.today()
+print(d) # 2020-06-25
+print(type(d)) # <class 'datetime.date'>
+```
+如何统计两个日期之间有多少个星期六？
+```python
+import datetime
+
+d1 = datetime.date(1869, 1, 2)
+d2 = datetime.date(1869, 10, 2)
+dt = (d2 - d1).days
+print(dt)
+print(d1.isoweekday()) # 6
+print(dt // 7 + 1) # 40
+```
 
 ## time 类
+```python
+class time:
+	def __init__(self, hour, minute, second, microsecond, tzinfo):
+		pass
+```
+
+如何使用 datetime.time() 类？
+```python
+import datetime
+
+t = datetime.time(12, 9, 23, 12980)
+print(t) # 12:09:23.012980
+print(type(t)) # <class 'datetime.time'>
+```
+注意：
+1. 1秒 = 1000 毫秒（milliseconds）
+2. 1毫秒 = 1000 微妙（microseconds）
+
+如何将给定日期转换为当天开始的时间？
+```python
+import datetime
+
+date = datetime.date(2019, 10, 2)
+dt = datetime.datetime(date.year, date.month, date.day)
+print(dt) # 2019-10-02 00:00:00
+
+dt = datetime.datetime.combine(date, datetime.time.min)
+print(dt) # 2019-10-02 00:00:00
+```
 
 ## timedelta 类
+timedelta 表示具体时间实例中的一段时间。你可以把它们简单想象成两个日期或时间之间的间隔。它常常被用来从 datetime 对象中添加或移除一段特定的时间。
+```python
+class timedelta(SupportsAbs[timedelta]):
+	def __init__(self, days, seconds, microseconds, milliseconds, minutes, hours, weeks,):
+		pass
+	def days(self):
+		pass
+	def total_seconds(self):
+		pass
+```
+
+如何使用 datetime.timedelta() 类？
+```python
+import datetime
+
+td = datetime.timedelta(days=30)
+print(td) # 30 days, 0:00:00
+print(type(td)) # <class 'datetime.timedelta'>
+print(datetime.date.today()) # 2020-07-01
+print(datetime.date.today() + td) # 2020-07-31
+
+dt1 = datetime.datetime(2020, 1, 31, 10, 10, 0)
+dt2 = datetime.datetime(2019, 1, 31, 10, 10, 0)
+td = dt1 - dt2
+print(td) # 365 days, 0:00:00
+print(type(td)) # <class 'datetime.timedelta'>
+
+td1 = datetime.timedelta(days=30) # 30 days
+td2 = datetime.timedelta(weeks=1) # 1 week
+td = td1 - td2
+print(td) # 23 days, 0:00:00
+print(type(td)) # <class 'datetime.timedelta'>
+```
+
+如果将两个 datetime 对象相减，就会得到表示该时间间隔的 timedelta 对象。
+同样地，将两个时间间隔相减，可以得到另一个 timedelta 对象。
 
 # 文件与文件系统
 
 ## 打开文件
+`open(file, mode='r', buffering=None, encoding=None, errors=None, newline=None, closefd=True)` Open file and return a stream. Raise OSError upon failure.
+a. file : 必需，文件路径（相对或者绝对路径）。
+b. mode : 可选，文件打开模式
+c. buffering : 设置缓冲
+d. encoding : 一般使用utf8
+e. errors : 报错级别
+f. newline : 区分换行符
+
+常见的 mode 如下表所示：
+打开模式 | 执行操作
+ --- | --- 
+'r' | 以只读方式打开文件。文件的指针将会放在文件的开头。这是默认模式。
+'w' | 打开一个文件只用于写入。如果该文件已存在则打开文件，并从开头开始编辑，即原有内容会被删除；如果该文件不存在，创建新文件。
+'x' | 写模式，新建一个文件，如果该文件已存在则会报错。
+'a' | 追加模式，打开一个文件用于追加。如果该文件已存在，文件指针将会放在文件的结尾，也就是说，新的内容将会被写入到已有内容之后；如果该文件不存在，创建新文件进行写入。
+'b' | 以二进制模式打开文件。一般用于非文本文件，如：图片。
+'t' | 以文本模式打开（默认）。一般用于文本文件，如：txt。
+'+' | 可读写模式（可添加到其它模式中使用）
+
+打开一个文件，并返回文件对象，如果该文件无法被打开，会抛出 OSError 。
+```python
+f = open('将进酒.txt')
+print(f)
+# <_io.TextIOWrapper name='将进酒.txt' mode='r' encoding='cp936'>
+
+for each in f:
+	print(each)
+ 
+# 君不见，黄河之水天上来，奔流到海不复回。
+# 君不见，高堂明镜悲白发，朝如青丝暮成雪。
+# 人生得意须尽欢，莫使金樽空对月。
+# 天生我材必有用，千金散尽还复来。
+# 烹羊宰牛且为乐，会须一饮三百杯。
+# 岑夫子，丹丘生，将进酒，杯莫停。
+# 与君歌一曲，请君为我倾耳听。
+# 钟鼓馔玉不足贵，但愿长醉不复醒。
+# 古来圣贤皆寂寞，惟有饮者留其名。
+# 陈王昔时宴平乐，斗酒十千恣欢谑。
+# 主人何为言少钱，径须沽取对君酌。
+# 五花马，千金裘，呼儿将出换美酒，与尔同销万古愁。
+```
 
 ## 文件对象方法
+`fileObject.close()` 用于关闭一个已打开的文件。关闭后的文件不能再进行读写操作， 否则会触发 ValueError 错误。
+```python
+f = open("将进酒.txt")
+print('FileName:', f.name) # FileName: 将进酒.txt
+f.close()
+```
+
+`fileObject.read([size])` 用于从文件读取指定的字符数，如果未给定或为负则读取所有。
+```python
+f = open('将进酒.txt', 'r')
+line = f.read(20)
+print("读取的字符串: %s" % line)
+# 读取的字符串: 君不见，黄河之水天上来，奔流到海不复回。
+
+f.close()
+```
+
+fileObject.readline() 读取整行，包括 "\n" 字符。
+```python
+f = open('将进酒.txt', 'r')
+line = f.readline()
+print("读取的字符串: %s" % line)
+# 读取的字符串: 君不见，黄河之水天上来，奔流到海不复回。
+
+f.close()
+```
+
+`fileObject.readlines()` 用于读取所有行(直到结束符 EOF)并返回列表，该列表可以由 Python 的 `for... in ...` 结构进行处理。
+```python
+f = open('将进酒.txt', 'r')
+lines = f.readlines()
+print(lines)
+
+for each in lines:
+	each.strip()
+	print(each)
+
+# 君不见，黄河之水天上来，奔流到海不复回。
+# 君不见，高堂明镜悲白发，朝如青丝暮成雪。
+# 人生得意须尽欢，莫使金樽空对月。
+# 天生我材必有用，千金散尽还复来。
+# 烹羊宰牛且为乐，会须一饮三百杯。
+# 岑夫子，丹丘生，将进酒，杯莫停。
+# 与君歌一曲，请君为我倾耳听。
+# 钟鼓馔玉不足贵，但愿长醉不复醒。
+# 古来圣贤皆寂寞，惟有饮者留其名。
+# 陈王昔时宴平乐，斗酒十千恣欢谑。
+# 主人何为言少钱，径须沽取对君酌。
+# 五花马，千金裘，呼儿将出换美酒，与尔同销万古愁。
+
+f.close()
+```
+
+`fileObject.tell()` 返回文件的当前位置，即文件指针当前位置。
+```python
+f = open('将进酒.txt', 'r')
+line = f.readline()
+print(line)
+# 君不见，黄河之水天上来，奔流到海不复回。
+
+pos = f.tell()
+print(pos) # 42
+
+f.close()
+```
+
+`fileObject.seek(offset[, whence])` 用于移动文件读取指针到指定位置。
+a. offset ：开始的偏移量，也就是代表需要移动偏移的字节数，如果是负数表示从倒数第几位开始。
+b. whence ：可选，默认值为 0。给 offset 定义一个参数，表示要从哪个位置开始偏移；0 代表从文件开头开始算起，1 代表从当前位置开始算起，2 代表从文件末尾算起。
+```python
+f = open('将进酒.txt', 'r')
+line = f.readline()
+print(line)
+# 君不见，黄河之水天上来，奔流到海不复回。
+
+line = f.readline()
+print(line)
+# 君不见，高堂明镜悲白发，朝如青丝暮成雪。
+
+f.seek(0, 0)
+line = f.readline()
+print(line)
+# 君不见，黄河之水天上来，奔流到海不复回。
+
+f.close()
+```
+
+`fileObject.write(str)` 用于向文件中写入指定字符串，返回的是写入的字符长度。
+```python
+f = open('workfile.txt', 'wb+')
+print(f.write(b'0123456789abcdef')) # 16
+print(f.seek(5)) # 5
+print(f.read(1)) # b'5'
+print(f.seek(-3, 2)) # 13
+print(f.read(1)) # b'd'
+```
+
+在文件关闭前或缓冲区刷新前，字符串内容存储在缓冲区中，这时你在文件中是看不到写入的内容的。
+如果文件打开模式带 b ，那写入文件内容时， str （参数）要用 encode 方法转为 bytes 形式，否则报错： `TypeError: a bytes-like object is required, not 'str'` 。
+```python
+str = '...'
+# 文本 = Unicode字符序列
+# 相当于 string 类型
+
+str = b'...'
+# 文本 = 八位序列(0到255之间的整数)
+# 字节文字总是以‘b’或‘B’作为前缀；它们产生一个字节类型的实例，而不是str类型。
+# 相当于 byte[]
+```
+```python
+f = open('将进酒.txt', 'r+')
+str = '\n作者：李白'
+f.seek(0, 2)
+line = f.write(str)
+f.seek(0, 0)
+for each in f:
+	print(each)
+	
+# 君不见，黄河之水天上来，奔流到海不复回。
+# 君不见，高堂明镜悲白发，朝如青丝暮成雪。
+# 人生得意须尽欢，莫使金樽空对月。
+# 天生我材必有用，千金散尽还复来。
+# 烹羊宰牛且为乐，会须一饮三百杯。
+# 岑夫子，丹丘生，将进酒，杯莫停。
+# 与君歌一曲，请君为我倾耳听。
+# 钟鼓馔玉不足贵，但愿长醉不复醒。
+# 古来圣贤皆寂寞，惟有饮者留其名。
+# 陈王昔时宴平乐，斗酒十千恣欢谑。
+# 主人何为言少钱，径须沽取对君酌。
+# 五花马，千金裘，呼儿将出换美酒，与尔同销万古愁。
+# 作者：李白
+f.close()
+```
+
+`fileObject.writelines(sequence)` 向文件写入一个序列字符串列表，如果需要换行则要自己加入每行的换行符 \n 。
+```python
+f = open('test.txt', 'w+')
+seq = ['小马的程序人生\n', '老马的程序人生']
+f.writelines(seq)
+f.seek(0, 0)
+for each in f:
+	print(each)
+
+# 小马的程序人生
+# 老马的程序人生
+f.close()
+```
 
 ## 简洁的 with 语句
+一些对象定义了标准的清理行为，无论系统是否成功的使用了它，一旦不需要它了，那么这个标准的清理行为就会执行。关键词 with 语句就可以保证诸如文件之类的对象在使用完之后一定会正确的执行它的清理方法。
+
+不用 with，异常发生的时候，文件不会自动关闭。
+```python
+try:
+	f = open('myfile.txt', 'w')
+	for line in f:
+		print(line)
+except OSError as error:
+	print('出错啦!%s' % str(error))
+finally:
+	f.close()
+# 出错啦!not readable
+```
+
+这段代码执行完毕后，就算在处理过程中出问题了，文件 f 总是会关闭。
+```python
+try:
+	with open('myfile.txt', 'w') as f:
+	for line in f:
+		print(line)
+except OSError as error:
+	print('出错啦!%s' % str(error))
+# 出错啦!not readable
+```
 
 # OS模块中关于文件/目录常用的函数
+我们所知道常用的操作系统就有：Windows，Mac OS，Linu，Unix等，这些操作系统底层对于文件系统的访问工作原理是不一样的，因此你可能就要针对不同的系统来考虑使用哪些文件系统模块……，这样的做法是非常不友好且麻烦的，因为这样就意味着当你的程序运行环境一改变，你就要相应的去修改大量的代码来应对。
+
+有了OS（Operation System）模块，我们不需要关心什么操作系统下使用什么模块，OS模块会帮你选择正确的模块并调用。
+
+`os.getcwd()` 用于返回当前工作目录。
+`os.chdir(path)` 用于改变当前工作目录到指定的路径。
+```python
+import os
+path = 'C:\\'
+print("当前工作目录 : %s" % os.getcwd())
+# 当前工作目录 : C:\Users\Administrator\PycharmProjects\untitled1
+
+os.chdir(path)
+print("目录修改成功 : %s" % os.getcwd())
+# 目录修改成功 : C:\
+```
+
+`listdir (path='.')` 返回 path 指定的文件夹包含的文件或文件夹的名字的列表
+```python
+import os
+
+dirs = os.listdir()
+for item in dirs:
+	print(item)
+```
+
+`os.mkdir(path)` 创建单层目录，如果该目录已存在抛出异常。
+```python
+import os
+
+if os.path.isdir(r'.\b') is False:
+	os.mkdir(r'.\B')
+	os.mkdir(r'.\B\A')
+	
+os.mkdir(r'.\C\A') # FileNotFoundError
+```
+
+`os.makedirs(path)` 用于递归创建多层目录，如果该目录已存在抛出异常。
+```python
+import os
+os.makedirs(r'.\E\A')
+```
+
+`os.remove(path)` 用于删除指定路径的文件。如果指定的路径是一个目录，将抛出 OSError 。
+```python
+import os
+
+print("目录为: %s" % os.listdir(r'.\E\A'))
+
+os.remove(r'.\E\A\test.txt')
+print("目录为: %s" % os.listdir(r'.\E\A'))
+```
+
+`os.rmdir(path)` 用于删除单层目录。仅当这文件夹是空的才可以, 否则, 抛出 OSError 。
+```python
+import os
+
+print("目录为: %s" % os.listdir(r'.\E'))
+os.rmdir(r'.\E\A')
+print("目录为: %s" % os.listdir(r'.\E'))
+```
+
+`os.removedirs(path)` 递归删除目录，从子目录到父目录逐层尝试删除，遇到目录非空则抛出异常。
+```python
+import os
+
+print("目录为: %s" % os.listdir(os.getcwd()))
+os.removedirs(r'.\E\A') # 先删除A 然后删除E
+print("目录为: %s" % os.listdir(os.getcwd()))
+```
+
+`os.rename(src, dst)` 方法用于命名文件或目录，从 src 到 dst ，如果 dst 是一个存在的目录, 将抛出 OSError 。
+```python
+import os
+print("目录为: %s" % os.listdir(os.getcwd()))
+
+os.rename("test.txt", "test2.txt")
+print("重命名成功。")
+print("目录为: %s" % os.listdir(os.getcwd()))
+```
+
+`os.system(command)` 运行系统的shell命令（将字符串转化成命令）
+```python
+import os
+
+path = os.getcwd() + '\\a.py'
+a = os.system(r'python %s' % path)
+
+os.system('calc') # 打开计算器
+```
+
+1. os.curdir 指代当前目录（ . ）
+2. os.pardir 指代上一级目录（ .. ）
+3. os.sep 输出操作系统特定的路径分隔符（win下为 \\ ，Linux下为 / ）
+4. os.linesep 当前平台使用的行终止符（win下为 \r\n ，Linux下为 \n ）
+5. os.name 指代当前使用的操作系统（包括：'mac'，'nt'）
+```python
+import os
+
+print(os.curdir) # .
+print(os.pardir) # ..
+print(os.sep) # \
+print(os.linesep)
+print(os.name) # nt
+```
+
+1. os.path.basename(path) 去掉目录路径，单独返回文件名
+2. os.path.dirname(path) 去掉文件名，单独返回目录路径
+3. os.path.join(path1[, path2[, ...]]) 将 path1 ， path2 各部分组合成一个路径名
+4. os.path.split(path) 分割文件名与路径，返回 (f_path,f_name) 元组。如果完全使用目录，它会将最后一个目
+录作为文件名分离，且不会判断文件或者目录是否存在。
+5. os.path.splitext(path) 分离文件名与扩展名，返回 (f_path,f_name) 元组。
+```python
+import os
+
+# 返回文件名
+print(os.path.basename(r'C:\test\lsgo.txt')) # lsgo.txt
+# 返回目录路径
+print(os.path.dirname(r'C:\test\lsgo.txt')) # C:\test
+# 将目录和文件名合成一个路径
+print(os.path.join('C:\\', 'test', 'lsgo.txt')) # C:\test\lsgo.txt
+# 分割文件名与路径
+print(os.path.split(r'C:\test\lsgo.txt')) # ('C:\\test', 'lsgo.txt')
+# 分离文件名与扩展名
+print(os.path.splitext(r'C:\test\lsgo.txt')) # ('C:\\test\\lsgo', '.txt')
+```
+
+1. os.path.getsize(file) 返回指定文件大小，单位是字节。
+2. os.path.getatime(file) 返回指定文件最近的访问时间
+3. os.path.getctime(file) 返回指定文件的创建时间
+4. os.path.getmtime(file) 返回指定文件的最新的修改时间
+5. 浮点型秒数，可用time模块的 gmtime() 或 localtime() 函数换算
+```python
+import os
+import time
+
+file = r'.\lsgo.txt'
+print(os.path.getsize(file)) # 30
+print(os.path.getatime(file)) # 1565593737.347196
+print(os.path.getctime(file)) # 1565593737.347196
+print(os.path.getmtime(file)) # 1565593797.9298275
+print(time.gmtime(os.path.getctime(file)))
+# time.struct_time(tm_year=2019, tm_mon=8, tm_mday=12, tm_hour=7, tm_min=8, tm_sec=57, tm_wday=0,
+tm_yday=224, tm_isdst=0)
+print(time.localtime(os.path.getctime(file)))
+# time.struct_time(tm_year=2019, tm_mon=8, tm_mday=12, tm_hour=15, tm_min=8, tm_sec=57, tm_wday=0,
+tm_yday=224, tm_isdst=0)
+```
+
+1. os.path.exists(path) 判断指定路径（目录或文件）是否存在
+2. os.path.isabs(path) 判断指定路径是否为绝对路径
+3. os.path.isdir(path) 判断指定路径是否存在且是一个目录
+4. os.path.isfile(path) 判断指定路径是否存在且是一个文件
+5. os.path.islink(path) 判断指定路径是否存在且是一个符号链接
+6. os.path.ismount(path) 判断指定路径是否存在且是一个悬挂点
+7. os.path.samefile(path1,path2) 判断path1和path2两个路径是否指向同一个文件
+```python
+import os
+
+print(os.path.ismount('D:\\')) # True
+print(os.path.ismount('D:\\Test')) # False
+```
 
 # 序列与反序列化
+Python 的 pickle 模块实现了基本的数据序列和反序列化。
+1. 通过 pickle 模块的序列化操作我们能够将程序中运行的对象信息保存到文件中去，永久存储。
+2. 通过 pickle 模块的反序列化操作，我们能够从文件中创建上一次程序保存的对象。
+
+`pickle.dump(obj, file, [,protocol])` 将 obj 对象序列化存入已经打开的 file 中。
+1. obj ：想要序列化的 obj 对象。
+2. file :文件名称。
+3. protocol ：序列化使用的协议。如果该项省略，则默认为0。如果为负值或 HIGHEST_PROTOCOL ，则使用最高的协议版本。
+
+`pickle.load(file)` 将 file 中的对象序列化读出。
+```python
+import pickle
+
+dataList = [[1, 1, 'yes'],
+			[1, 1, 'yes'],
+			[1, 0, 'no'],
+			[0, 1, 'no'],
+			[0, 1, 'no']]
+dataDic = {0: [1, 2, 3, 4],
+		   1: ('a', 'b'),
+		   2: {'c': 'yes', 'd': 'no'}}
+		   
+# 使用dump()将数据序列化到文件中
+fw = open(r'.\dataFile.pkl', 'wb')
+
+# Pickle the list using the highest protocol available.
+pickle.dump(dataList, fw, -1)
+
+# Pickle dictionary using protocol 0.
+pickle.dump(dataDic, fw)
+fw.close()
+
+# 使用load()将数据从文件中序列化读出
+fr = open('dataFile.pkl', 'rb')
+data1 = pickle.load(fr)
+print(data1)
+# [[1, 1, 'yes'], [1, 1, 'yes'], [1, 0, 'no'], [0, 1, 'no'], [0, 1, 'no']]
+
+data2 = pickle.load(fr)
+print(data2)
+# {0: [1, 2, 3, 4], 1: ('a', 'b'), 2: {'c': 'yes', 'd': 'no'}}
+
+fr.close()
+```
