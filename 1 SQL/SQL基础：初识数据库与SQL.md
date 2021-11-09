@@ -226,7 +226,7 @@ regist_date    DATE ,
 PRIMARY KEY (product_id));
 ```
 对表进行全列 INSERT 时，可以省略表名后的列清单。这时 VALUES子句的值会默认按照从左到右的顺序赋给每一列。
-```
+```SQL
 -- 包含列清单
 INSERT INTO productins (product_id, product_name, product_type, 
 sale_price, purchase_price, regist_date) VALUES ('0005', '高压锅', '厨房用具', 6800, 5000, '2009-01-15');
@@ -282,7 +282,7 @@ FROM Product;
 本课程用表插入数据sql如下：
 ```SQL
 - DML ：插入数据
-STARTTRANSACTION;
+START TRANSACTION;
 INSERT INTO product VALUES('0001', 'T恤衫', '衣服', 1000, 500, '2009-09-20');
 INSERT INTO product VALUES('0002', '打孔器', '办公用品', 500, 320, '2009-09-11');
 INSERT INTO product VALUES('0003', '运动T恤', '衣服', 4000, 2800, NULL);
