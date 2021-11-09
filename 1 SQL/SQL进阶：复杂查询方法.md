@@ -44,7 +44,7 @@ SELECT product_type, COUNT(*)
   FROM product
  GROUP BY product_type ;
 ``` 
-创建的视图如下图所示：
+创建的视图如下图所示：  
 ![image](https://user-images.githubusercontent.com/44680953/140977302-a2ef69f6-b18e-4c32-b965-8f037cfa9944.png)
 
 ### 基于多表的视图
@@ -79,7 +79,7 @@ SELECT product_type, sale_price, shop_name
        shop_product
  WHERE product.product_id = shop_product.product_id;
 ```
-创建的视图如下图所示
+创建的视图如下图所示：  
 ![image](https://user-images.githubusercontent.com/44680953/140977434-52129f51-d430-45ae-b922-4dffe34cbb0b.png)
 
 
@@ -96,7 +96,7 @@ ALTER VIEW productSum
           FROM Product
          WHERE regist_date > '2009-09-11';
 ```
-此时productSum视图内容如下图所示
+此时productSum视图内容如下图所示：  
 ![image](https://user-images.githubusercontent.com/44680953/140977998-8fc8fb18-ff76-40e1-8f2e-0aa1d44543ac.png)
 
 ## 如何更新视图内容
@@ -118,7 +118,7 @@ UPDATE productsum
 ```
 此时我们再查看productSum视图，可以发现数据已经更新了  
 ![image](https://user-images.githubusercontent.com/44680953/140978283-895c7c3a-7d89-4461-8c41-0c4ceb93e0c6.png)  
-此时观察原表也可以发现数据也被更新了
+此时观察原表也可以发现数据也被更新了  
 ![image](https://user-images.githubusercontent.com/44680953/140978344-896163b7-df0e-4769-a41b-f41998dbbe46.png)  
 
 不知道大家看到这个结果会不会有疑问，刚才修改视图的时候是设置product_type='办公用品'的商品的sale_price=5000，为什么原表的数据只有一条做了修改呢？
@@ -188,7 +188,7 @@ SELECT product_id,
           FROM product) AS avg_price
   FROM product;
 ```
-查询结果如下图所示
+查询结果如下图所示  
 ![image](https://user-images.githubusercontent.com/44680953/140979808-529ddc23-7290-4393-84ef-e105886b818b.png)
 
 ## 关联子查询
@@ -203,7 +203,7 @@ SELECT product_type, product_name, sale_price
                       WHERE p1.product_type = p2.product_type
                       GROUP BY product_type);
 ```
-看一下这个例子的执行结果
+看一下这个例子的执行结果  
 ![image](https://user-images.githubusercontent.com/44680953/140980091-82072703-d91b-49cc-87a0-f4e1b23613bd.png)
 
 通过上面的例子我们可以发现，关联子查询就是通过一些标志将内外两层的查询连接起来起到过滤数据的目的。
