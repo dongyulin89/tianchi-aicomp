@@ -26,16 +26,14 @@ RDBMS 中最常见的系统结构就是`客户端/服务器类型（C/S类型）
 本次学习大家可以选择使用阿里云数据库服务器或者本地安装数据库进行学习，在下面对应的学习教程中也给告诉了大家如何创建本次学习需要的数据库表和数据，所以大家必须使用一个方式安装数据库，才能完成后面学习。
 
 ### 阿里云MySQL服务器使用介绍
-节约篇幅，具体相关介绍以及给大家写到pdf里了，大家点击链接即可进入查看：
-http://tianchi-media.oss-cn-beijing.aliyuncs.com/dragonball/SQL/other/阿里云MySQL服务器使用介绍.pdf
-优点： 操作使用方便，未来趋势（数据上云），导入、导出数据方便，运行速度快。
-缺点： 需要付费购买，不过现在对开发者有优惠活动，基础版本 1核1G，存储空间20G的，目前优惠价半年只需9.9元，一杯奶茶钱不到。
+节约篇幅，具体相关介绍以及给大家写到pdf里了，大家点击链接即可进入查看：[阿里云MySQL服务器使用介绍.pdf](http://tianchi-media.oss-cn-beijing.aliyuncs.com/dragonball/SQL/other/阿里云MySQL服务器使用介绍.pdf)
+- 优点： 操作使用方便，未来趋势（数据上云），导入、导出数据方便，运行速度快。
+- 缺点： 需要付费购买，不过现在对开发者有优惠活动，基础版本 1核1G，存储空间20G的，目前优惠价半年只需9.9元，一杯奶茶钱不到。
 
 ### 本地MySQL环境搭建方法介绍
-节约篇幅，具体相关介绍以及给大家写到pdf里了，大家点击链接即可进入查看：
-http://tianchi-media.oss-cn-beijing.aliyuncs.com/dragonball/SQL/other/本地MySQL环境搭建方法介绍.pdf
-优点： 免费，增强动手能力。
-缺点： 安装、配置麻烦，数据导入、导出耗时长。
+节约篇幅，具体相关介绍以及给大家写到pdf里了，大家点击链接即可进入查看：[本地MySQL环境搭建方法介绍.pdf](http://tianchi-media.oss-cn-beijing.aliyuncs.com/dragonball/SQL/other/本地MySQL环境搭建方法介绍.pdf)
+- 优点： 免费，增强动手能力。
+- 缺点： 安装、配置麻烦，数据导入、导出耗时长。
 
 
 # 初识 SQL
@@ -79,15 +77,54 @@ SQL 语句可以分为以下三类.
 语法：
 ```SQL
 CREATE DATABASE < 数据库名称 > ;
-```
-创建本课程使用的数据库
-```SQL
+
+-- 创建本课程使用的数据库
 CREATE DATABASE shop;
 ```
 
 ## 表的创建（ CREATE TABLE 语句）
+语法：
+```SQL
+CREATE TABLE < 表名 >
+( < 列名 1> < 数据类型 > < 该列所需约束 > ,
+  < 列名 2> < 数据类型 > < 该列所需约束 > ,
+  < 列名 3> < 数据类型 > < 该列所需约束 > ,
+  < 列名 4> < 数据类型 > < 该列所需约束 > ,
+  .
+  .
+  .
+  < 该表的约束 1> , < 该表的约束 2> ,……);
+  
+-- 创建本课程用到的商品表
+CREATE TABLE product(
+     product_id CHAR(4) NOT NULL, 
+     product_name VARCHAR(100) NOT NULL, 
+     product_type VARCHAR(32) NOT NULL, 
+     sale_price INTEGER, 
+     purchase_price INTEGER, 
+     regist_date DATE, 
+     PRIMARY KEY(product_id)
+ )  ;
+ ```
+
 ## 命名规则
+![image](https://user-images.githubusercontent.com/44680953/140951977-e62bdddb-8c02-414b-bda2-ed496d8dbf1a.png)
+- 只能使用`半角英文字母、数字、下划线（_）`作为数据库、表和列的名称
+- 名称必须以`半角英文字母开头`
+
 ## 数据类型的指定
+数据库创建的表，所有的列都必须指定数据类型，每一列都不能存储与该列数据类型不符的数据。
+- `INTEGER 型`：用来指定存储整数的列的数据类型（数字型），不能存储小数。
+- `CHAR 型`：用来存储定长字符串，当列中存储的字符串长度达不到最大长度的时候，使用半角空格进行补足，由于会浪费存储空间，所以一般不使用。
+- `VARCHAR 型`：用来存储可变长度字符串，定长字符串在字符数未达到最大长度时会用半角空格补足，但可变长字符串不同，即使字符数未达到最大长度，也不会用半角空格补足。
+- `DATE 型`：用来指定存储日期（年月日）的列的数据类型（日期型）。
+
 ## 约束的设置
+约束是除了数据类型之外，对列中存储的数据进行限制或者追加条件的功能。
+- `NOT NULL`是非空约束，即该列必须输入数据。
+- `PRIMARY KEY`是主键约束，代表该列是唯一值，可以通过该列取出特定的行的数据。
+
 ## 表的删除和更新
+
+
 ## 向 product 表中插入数据
