@@ -125,6 +125,171 @@ CREATE TABLE product(
 - `PRIMARY KEY`是主键约束，代表该列是唯一值，可以通过该列取出特定的行的数据。
 
 ## 表的删除和更新
+删除表的语法：
+```SQL
+DROP TABLE < 表名 > ;
+
+-- 删除 product 表
+/*
+需要特别注意的是，删除的表是无法恢复的，只能重新插入，请执行删除操作时无比要谨慎。
+*/
+DROP TABLE product;
+```
+
+添加列的 ALTER TABLE 语句
+```SQL
+ALTER TABLE < 表名 > ADD COLUMN < 列的定义 >;
+
+
+-- 添加一列可以存储100位的可变长字符串的 product_name_pinyin 列
+ALTER TABLE product ADD COLUMN product_name_pinyin VARCHAR(100);
+```
+
+删除列的 ALTER TABLE 语句
+```SQL
+ALTER TABLE < 表名 > DROP COLUMN < 列名 >;
+
+-- 删除 product_name_pinyin 列
+ALTER TABLE product DROP COLUMN product_name_pinyin;
+```
+
+清空表内容
+```SQL
+TRUNCATE TABLE TABLE_NAME;
+```
+优点：相比drop/delete，truncate用来清除数据时，速度最快。
+
+数据的更新
+```SQL
+UPDATE <表名>
+SET <列名> = <表达式> [, <列名2>=<表达式2>...];  
+WHERE <条件>;  -- 可选，非常重要。
+ORDER BY 子句;  --可选
+LIMIT 子句; --可选
+```
+使用 UPDATE 时要注意添加 where 条件，否则将会将所有的行按照语句修改
+```SQL
+-- 修改所有的注册时间
+UPDATE product
+   SET regist_date = '2009-10-10';  
+-- 仅修改部分商品的单价
+UPDATE product
+   SET sale_price = sale_price * 10
+ WHERE product_type = '厨房用具';  
+```
+使用 UPDATE 也可以将列更新为 NULL（该更新俗称为NULL清空）。此时只需要将赋值表达式右边的值直接写为 NULL 即可。
+```SQL
+-- 将商品编号为0008的数据（圆珠笔）的登记日期更新为NULL  
+UPDATE product
+   SET regist_date = NULL
+ WHERE product_id = '0008';
+```
+和 INSERT 语句一样， UPDATE 语句也可以将 NULL 作为一个值来使用。**但是，只有未设置 NOT NULL 约束和主键约束的列才可以清空为NULL。** 如果将设置了上述约束的列更新为 NULL，就会出错，这点与INSERT 语句相同。
+
+多列更新
+UPDATE 语句的 SET 子句支持同时将多个列作为更新对象。
+```SQL
+-- 基础写法，一条UPDATE语句只更新一列
+UPDATE product
+   SET sale_price = sale_price * 10
+ WHERE product_type = '厨房用具';
+UPDATE product
+   SET purchase_price = purchase_price / 2
+ WHERE product_type = '厨房用具';  
+```
+该写法可以得到正确结果，但是代码较为繁琐。可以采用合并的方法来简化代码。
+```SQL
+-- 合并后的写法
+UPDATE product
+   SET sale_price = sale_price * 10,
+       purchase_price = purchase_price / 2
+ WHERE product_type = '厨房用具';  
+```
+需要明确的是，SET 子句中的列不仅可以是两列，还可以是三列或者更多。
 
 
 ## 向 product 表中插入数据
+基本语法：
+```SQL
+INSERT INTO <表名> (列1, 列2, 列3, ……) VALUES (值1, 值2, 值3, ……); 
+```
+
+为了学习INSERT语句用法，我们首先创建一个名为productins的表，建表语句如下：
+```SQL
+CREATE TABLE productins
+(product_id    CHAR(4)      NOT NULL,
+product_name   VARCHAR(100) NOT NULL,
+product_type   VARCHAR(32)  NOT NULL,
+sale_price     INTEGER      DEFAULT 0,
+purchase_price INTEGER ,
+regist_date    DATE ,
+PRIMARY KEY (product_id));
+```
+对表进行全列 INSERT 时，可以省略表名后的列清单。这时 VALUES子句的值会默认按照从左到右的顺序赋给每一列。
+```
+-- 包含列清单
+INSERT INTO productins (product_id, product_name, product_type, 
+sale_price, purchase_price, regist_date) VALUES ('0005', '高压锅', '厨房用具', 6800, 5000, '2009-01-15');
+-- 省略列清单
+INSERT INTO productins 
+VALUES ('0005', '高压锅', '厨房用具', 6800, 5000, '2009-01-15'); 
+```
+原则上，执行一次 INSERT 语句会插入一行数据。插入多行时，通常需要循环执行相应次数的 INSERT 语句。其实很多 RDBMS 都支持一次插入多行数据
+```SQL
+-- 通常的INSERT
+INSERT INTO productins VALUES ('0002', '打孔器', 
+'办公用品', 500, 320, '2009-09-11');
+INSERT INTO productins VALUES ('0003', '运动T恤', 
+'衣服', 4000, 2800, NULL);
+INSERT INTO productins VALUES ('0004', '菜刀', 
+'厨房用具', 3000, 2800, '2009-09-20');
+-- 多行INSERT （ DB2、SQL、SQL Server、 PostgreSQL 和 MySQL多行插入）
+INSERT INTO productins VALUES ('0002', '打孔器', 
+'办公用品', 500, 320, '2009-09-11'),
+('0003', '运动T恤', '衣服', 4000, 2800, NULL),
+('0004', '菜刀', '厨房用具', 3000, 2800, '2009-09-20');  
+-- Oracle中的多行INSERT
+INSERT ALL INTO productins VALUES ('0002', '打孔器', '办公用品', 500, 320, '2009-09-11')
+INTO productins VALUES ('0003', '运动T恤', '衣服', 4000, 2800, NULL)
+INTO productins VALUES ('0004', '菜刀', '厨房用具', 3000, 2800, '2009-09-20')
+SELECT * FROM DUAL;  
+-- DUAL是Oracle特有（安装时的必选项）的一种临时表A。因此“SELECT *FROM DUAL” 部分也只是临时性的，并没有实际意义。  
+```
+INSERT 语句中想给某一列赋予 NULL 值时，可以直接在 VALUES子句的值清单中写入 NULL。想要插入 NULL 的列一定不能设置 NOT NULL 约束。
+```SQL
+INSERT INTO productins (product_id, product_name, product_type, 
+sale_price, purchase_price, regist_date) VALUES ('0006', '叉子', 
+'厨房用具', 500, NULL, '2009-09-20'); 
+```
+还可以向表中插入默认值（初始值）。可以通过在创建表的CREATE TABLE 语句中设置DEFAULT约束来设定默认值。
+```SQL
+CREATE TABLE productins
+(product_id CHAR(4) NOT NULL,
+（略）
+sale_price INTEGER
+（略）	DEFAULT 0, -- 销售单价的默认值设定为0;
+PRIMARY KEY (product_id));  
+```
+可以使用INSERT … SELECT 语句从其他表复制数据。
+```SQL
+-- 将商品表中的数据复制到商品复制表中
+INSERT INTO productocpy (product_id, product_name, product_type, sale_price, purchase_price, regist_date)
+SELECT product_id, product_name, product_type, sale_price, 
+purchase_price, regist_date
+FROM Product;
+```
+
+本课程用表插入数据sql如下：
+```SQL
+- DML ：插入数据
+STARTTRANSACTION;
+INSERT INTO product VALUES('0001', 'T恤衫', '衣服', 1000, 500, '2009-09-20');
+INSERT INTO product VALUES('0002', '打孔器', '办公用品', 500, 320, '2009-09-11');
+INSERT INTO product VALUES('0003', '运动T恤', '衣服', 4000, 2800, NULL);
+INSERT INTO product VALUES('0004', '菜刀', '厨房用具', 3000, 2800, '2009-09-20');
+INSERT INTO product VALUES('0005', '高压锅', '厨房用具', 6800, 5000, '2009-01-15');
+INSERT INTO product VALUES('0006', '叉子', '厨房用具', 500, NULL, '2009-09-20');
+INSERT INTO product VALUES('0007', '擦菜板', '厨房用具', 880, 790, '2008-04-28');
+INSERT INTO product VALUES('0008', '圆珠笔', '办公用品', 100, NULL, '2009-11-11');
+COMMIT;
+```
