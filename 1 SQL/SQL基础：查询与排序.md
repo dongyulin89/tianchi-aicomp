@@ -151,13 +151,9 @@ SELECT product_name, product_type, regist_date
 
 ## 真值表
 AND 运算符：两侧的真值都为真时返回真，除此之外都返回假。
-![image](https://user-images.githubusercontent.com/44680953/140971583-dfdfaa98-62f2-4379-abe4-9193385bc6b1.png)
-
 OR 运算符：两侧的真值只要有一个不为假就返回真，只有当其两侧的真值都为假时才返回假。
-![image](https://user-images.githubusercontent.com/44680953/140971630-53b1dd6b-265d-491c-80b7-4a9ce8d2ca73.png)
-
 NOT运算符：只是单纯的将真转换为假，将假转换为真。
-![image](https://user-images.githubusercontent.com/44680953/140971670-dc3cfc29-8413-4052-b4d0-ca20d7ee7490.png)
+![image](https://user-images.githubusercontent.com/44680953/140971583-dfdfaa98-62f2-4379-abe4-9193385bc6b1.png)
 
 查询条件为P AND（Q OR R）的真值表
 ![image](https://user-images.githubusercontent.com/44680953/140971731-fdac0252-e94b-4db2-a5c7-764d7e40f5db.png)
@@ -167,30 +163,152 @@ NULL的真值结果既不为真，也不为假，因为并不知道这样一个�
 这时真值是除真假之外的第三种值——不确定（UNKNOWN）。
 与通常的逻辑运算被称为二值逻辑相对，只有 SQL 中的逻辑运算被称为三值逻辑。
 
-三值逻辑下的AND真值表为：
-![image](https://user-images.githubusercontent.com/44680953/140971941-36e8cd0b-9ab0-4d4b-8f94-f623924319d9.png)
-**假 > 不确定 > 真**
-
-三值逻辑下的OR真值表为：
-![image](https://user-images.githubusercontent.com/44680953/140971982-7840ac6c-e3a3-4e4e-9a27-1fde9f59953f.png)
-**真 > 不确定 > 假**
+三值逻辑下的AND和OR真值表为  
+![image](https://user-images.githubusercontent.com/44680953/140971941-36e8cd0b-9ab0-4d4b-8f94-f623924319d9.png)  
+AND: **假 > 不确定 > 真**  
+OR : **真 > 不确定 > 假**  
 
 # 对表进行聚合查询
 ## 聚合函数
+SQL中用于汇总的函数叫做聚合函数。以下五个是最常用的聚合函数：
+- COUNT：计算表中的记录数（行数）
+- SUM：计算表中数值列中数据的合计值
+- AVG：计算表中数值列中数据的平均值
+- MAX：求出表中任意列中数据的最大值
+- MIN：求出表中任意列中数据的最小值
+
+```SQL
+-- 计算全部数据的行数（包含NULL）
+SELECT COUNT(*)
+  FROM product;
+-- 计算NULL以外数据的行数
+SELECT COUNT(purchase_price)
+  FROM product;
+-- 计算销售单价和进货单价的合计值
+SELECT SUM(sale_price), SUM(purchase_price) 
+  FROM product;
+-- 计算销售单价和进货单价的平均值
+SELECT AVG(sale_price), AVG(purchase_price)
+  FROM product;
+-- MAX和MIN也可用于非数值型数据
+SELECT MAX(regist_date), MIN(regist_date)
+  FROM product;
+```
+
 ## 使用聚合函数删除重复值
+```SQL
+-- 计算去除重复数据后的数据行数
+SELECT COUNT(DISTINCT product_type)
+ FROM product;
+ 
+-- 是否使用DISTINCT时的动作差异（SUM函数）
+SELECT SUM(sale_price), SUM(DISTINCT sale_price)
+ FROM product;
+```
+
 ## 常用法则
+- COUNT函数的结果根据参数的不同而不同。COUNT(*)会得到包含NULL的数据行数，而COUNT(<列名>)会得到NULL之外的数据行数。
+- 聚合函数会将NULL排除在外。但COUNT(*)例外，并不会排除NULL。
+- MAX/MIN函数几乎适用于所有数据类型的列。SUM/AVG函数只适用于数值类型的列。
+- 想要计算值的种类时，可以在COUNT函数的参数中使用DISTINCT。
+- 在聚合函数的参数中使用DISTINCT，可以删除重复数据。
 
-# 对表进行分组
-## GROUP BY语句
+# GROUP BY 语句
+```SQL
+SELECT <列名1>,<列名2>, <列名3>, ……
+  FROM <表名>
+ GROUP BY <列名1>, <列名2>, <列名3>, ……;
+ 
+-- 按照商品种类统计数据行数
+SELECT product_type, COUNT(*)
+  FROM product
+ GROUP BY product_type;
+-- 不含GROUP BY
+SELECT product_type, COUNT(*)
+  FROM product
+```
+
+![image](https://user-images.githubusercontent.com/44680953/140973736-7bf9d1b5-5f52-4a47-b5d4-655a7bb7f3f5.png)  
+GROUP BY 子句就像切蛋糕那样将表进行了分组，在 GROUP BY 子句中指定的列称为`聚合键`或者`分组列`。
+
 ## 聚合键中包含NULL时
+将进货单价（purchase_price）作为聚合键举例：
+```SQL
+SELECT purchase_price, COUNT(*)
+  FROM product
+ GROUP BY purchase_price;
+```
+此时会将NULL作为一组特殊数据进行处理
+
 ## GROUP BY书写位置
+GROUP BY的子句书写顺序有严格要求，不按要求会导致SQL无法正常执行，目前出现过的子句书写顺序为：
+
+1.`SELECT` → 2.`FROM` → 3.`WHERE` → 4.`GROUP BY`
+
+其中前三项用于筛选数据，GROUP BY对筛选出的数据进行处理
+
 ## 在WHERE子句中使用GROUP BY
+```SQL
+SELECT purchase_price, COUNT(*)
+  FROM product
+ WHERE product_type = '衣服'
+ GROUP BY purchase_price;
+```
+
 ## 常见错误
+在使用聚合函数及GROUP BY子句时，经常出现的错误有：
+- 在聚合函数的SELECT子句中写了聚合健以外的列 使用COUNT等聚合函数时，SELECT子句中如果出现列名，只能是GROUP BY子句中指定的列名（也就是聚合键）。
+- 在GROUP BY子句中使用列的别名 SELECT子句中可以通过AS来指定别名，但在GROUP BY中不能使用别名。因为在DBMS中 ,**SELECT子句在GROUP BY子句后执行** 。
+- 在WHERE中使用聚合函数 原因是聚合函数的使用前提是结果集已经确定，而WHERE还处于确定结果集的过程中，所以相互矛盾会引发错误。 如果想指定条件，可以在SELECT，HAVING（下面马上会讲）以及ORDER BY子句中使用聚合函数。
 
-# 为聚合结果指定条件
+# HAVING 语句
 ## 用HAVING得到特定分组
-## HAVING特点
+![image](https://user-images.githubusercontent.com/44680953/140974475-a0d95db3-592d-491f-8ac7-ca7c370596b8.png)  
+将表使用GROUP BY分组后，怎样才能只取出其中两组？
 
-# 对查询结果进行排序
-## ORDER BY
+这里WHERE不可行，因为，WHERE子句只能指定记录（行）的条件，而不能用来指定组的条件（例如，“数据行数为 2 行”或者“平均值为 500”等）。
+可以在GROUP BY后使用HAVING子句。
+HAVING的用法类似WHERE
+
+## HAVING特点
+HAVING子句用于对分组进行过滤，可以使用数字、聚合函数和GROUP BY中指定的列名（聚合键）。
+```SQL
+-- 数字
+SELECT product_type, COUNT(*)
+  FROM product
+ GROUP BY product_type
+HAVING COUNT(*) = 2;
+-- 错误形式（因为product_name不包含在GROUP BY聚合键中）
+SELECT product_type, COUNT(*)
+  FROM product
+ GROUP BY product_type
+HAVING product_name = '圆珠笔';
+```
+
+# ORDER BY 语句
+SQL中的执行结果是随机排列的，当需要按照特定顺序排序时，可已使用ORDER BY子句。
+```SQL
+SELECT <列名1>, <列名2>, <列名3>, ……
+  FROM <表名>
+ ORDER BY <排序基准列1>, <排序基准列2>, ……
+ 
+ -- 降序排列
+SELECT product_id, product_name, sale_price, purchase_price
+  FROM product
+ ORDER BY sale_price DESC;
+-- 多个排序键
+SELECT product_id, product_name, sale_price, purchase_price
+  FROM product
+ ORDER BY sale_price, product_id;
+-- 当用于排序的列名中含有NULL时，NULL会在开头或末尾进行汇总。
+SELECT product_id, product_name, sale_price, purchase_price
+  FROM product
+ ORDER BY purchase_price;
+```
+
 ## ORDER BY中列名可使用别名
+SQL在使用 HAVING 子句时 SELECT 语句的执行顺序为：  
+`FROM` → `WHERE` → `GROUP BY` → `HAVING` → `SELECT` → `ORDER BY`
+
+其中SELECT的执行顺序在 GROUP BY 子句之后，ORDER BY 子句之前。也就是说，当在ORDER BY中使用别名时，已经知道了SELECT设置的别名存在，但是在GROUP BY中使用别名时还不知道别名的存在，**所以在ORDER BY中可以使用别名，但是在GROUP BY中不能使用别名**。
+
