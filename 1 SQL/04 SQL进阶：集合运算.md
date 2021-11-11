@@ -96,10 +96,33 @@ Bag 是和 set 类似的一种数学结构, 不一样的地方在于: bag 里面
 
 
 ### 隐式类型转换
-
+通常来说, 我们会把类型完全一致, 并且代表相同属性的列使用 UNION 合并到一起显示, 但有时候, 即使数据类型不完全相同, 也会通过隐式类型转换来**将两个类型不同的列放在一列里显示** , 例如字符串和数值类型:  
+```SQL
+SELECT product_id, product_name, '1'
+  FROM product
+ UNION
+SELECT product_id, product_name,sale_price
+  FROM product2;
+```
+上述查询能够正确执行,得到如下结果:  
+![image](https://user-images.githubusercontent.com/44680953/141328097-d974e025-e279-471a-89f4-85b85337e70b.png)  
 
 
 ## INTERSECT 交运算
+虽然集合的交运算在SQL标准中已经出现多年了, 然而很遗憾的是, 截止到 MySQL 8.0 版本, MySQL 仍然不支持 INTERSECT 操作.
+```SQL
+SELECT product_id, product_name
+  FROM product
+  
+INTERSECT
+SELECT product_id, product_name
+  FROM product2
+```
+> 错误代码：1064
+You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELECT product_id, product_name
+FROM product2
+
+
 ### bag 的交运算
 
 ## EXCEPT 差运算
