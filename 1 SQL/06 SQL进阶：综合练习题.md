@@ -1,5 +1,6 @@
 创建数据表脚本：[link](http://tianchi-media.oss-cn-beijing.aliyuncs.com/dragonball/SQL/create_table.sql)  
 插入数据脚本：[link](http://tianchi-media.oss-cn-beijing.aliyuncs.com/dragonball/SQL/data.zip)  
+参考答案：[link](http://tianchi-media.oss-cn-beijing.aliyuncs.com/dragonball/SQL/other/Task06_Answers.pdf)
 
 大家下载好脚本后，先在MySQL环境中运行create_table.sql脚本，创建数据表，然后解压下载好的data.zip，解压后目录如下：
 ```
