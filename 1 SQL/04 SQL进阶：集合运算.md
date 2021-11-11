@@ -645,17 +645,196 @@ SELECT SP.shop_id
  WHERE IP.inventory_id = 'P001';
 ```
 得到如下结果  
-![image](https://user-images.githubusercontent.com/44680953/141336732-b5ab7fa8-4692-4999-b846-019dde2a02fe.png)
+![image](https://user-images.githubusercontent.com/44680953/141336732-b5ab7fa8-4692-4999-b846-019dde2a02fe.png)  
+我们可以看到, 连结第三张表的时候, 也是通过 ON 子句指定连结条件(这里使用最基础的等号将作为连结条件的product 表和shopproduct 表中的商品编号 product_id 连结了起来), 由于product 表和shopproduct 表已经进行了连结,因此就无需再对product 表和 Inventoryproduct 表进行连结了(虽然也可以进行连结,但结果并不会发生改变, 因为本质上并没有增加新的限制条件).  
 
 
 ### 多表进行外连结
+```SQL
+SELECT P.product_id
+       ,P.product_name
+       ,P.sale_price
+       ,SP.shop_id
+       ,SP.shop_name
+       ,IP.inventory_quantity
+  FROMproduct AS P
+  LEFT OUTER JOINshopproduct AS SP
+ON SP.product_id = P.product_id
+LEFT OUTER JOIN Inventoryproduct AS IP
+ON SP.product_id = IP.product_id
+```
+![image](https://user-images.githubusercontent.com/44680953/141337055-cefeb836-793b-4df7-9fe6-c156c7665051.png)  
+
 
 ## 非等值连结(ON)
+除了使用相等判断的等值连结, 也可以使用比较运算符来进行连接. 实际上, 包括比较运算符(<,<=,>,>=, BETWEEN)和谓词运算(LIKE, IN, NOT 等等)在内的所有的逻辑运算都可以放在 ON 子句内作为连结条件.  
+
+
 ### 非等值自左连结(SELF JOIN)
+#### 使用非等值自左连结实现排名
+希望对 product 表中的商品按照售价赋予排名. 一个从集合论出发,使用自左连结的思路是, 对每一种商品,找出售价不低于它的所有商品, 然后对售价不低于它的商品使用 COUNT 函数计数. 例如, 对于价格最高的商品,  
+```SQL
+SELECT  product_id
+       ,product_name
+       ,sale_price
+       ,COUNT(p2_id) AS rank_id
+  FROM (--使用自左连结对每种商品找出价格不低于它的商品
+        SELECT P1.product_id
+               ,P1.product_name
+               ,P1.sale_price
+               ,P2.product_id AS P2_id
+               ,P2.product_name AS P2_name
+               ,P2.sale_price AS P2_price 
+          FROM product AS P1 
+          LEFT OUTER JOIN product AS P2 
+            ON P1.sale_price <= P2.sale_price 
+        ) AS X
+ GROUP BY product_id, product_name, sale_price
+ ORDER BY rank_id; 
+```
+![image](https://user-images.githubusercontent.com/44680953/141337392-aaa92e07-c8a8-49be-b53c-b6d7396f77f9.png)  
+
+注 1: COUNT 函数的参数是列名时, 会忽略该列中的缺失值, 参数为 * 时则不忽略缺失值.  
+注 2: 上述排名方案存在一些问题–如果两个商品的价格相等, 则会导致两个商品的排名错误, 例如, 叉子和打孔器的排名应该都是第六, 但上述查询导致二者排名都是第七. 试修改上述查询使得二者的排名均为第六.  
+注 3: 实际上, 进行排名有专门的函数, 这是 MySQL 8.0 新增加的窗口函数中的一种(窗口函数将在下一章学习), 但在较低版本的 MySQL 中只能使用上述自左连结的思路.  
+
+#### 使用非等值自左连结进行累计求和
+请按照商品的售价从低到高,对售价进行累计求和[注:这个案例缺少实际意义, 并且由于有两种商品价格相同导致了不必要的复杂度, 但示例数据库的表结构比较简单, 暂时未想出有实际意义的例题]  
+
+首先, 按照题意, 对每种商品使用自左连结, 找出比该商品售价价格更低或相等的商品. 
+```SQL
+SELECT  P1.product_id
+       ,P1.product_name
+       ,P1.sale_price
+       ,P2.product_id AS P2_id
+       ,P2.product_name AS P2_name
+       ,P2.sale_price AS P2_price 
+  FROM product AS P1 
+  LEFT OUTER JOIN product AS P2 
+    ON P1.sale_price >= P2.sale_price
+ ORDER BY P1.sale_price,P1.product_id	
+```
+查看查询结果  
+![image](https://user-images.githubusercontent.com/44680953/141337696-30897892-135c-4f2f-855f-87fec090ed56.png)  
+
+下一步, 按照 P1.product_Id 分组,对 P2_price 求和:  
+```SQL
+SELECT  product_id
+       ,product_name
+       ,sale_price
+       ,SUM(P2_price) AS cum_price 
+  FROM (SELECT  P1.product_id
+               ,P1.product_name
+               ,P1.sale_price
+               ,P2.product_id AS P2_id
+               ,P2.product_name AS P2_name
+               ,P2.sale_price AS P2_price 
+          FROM product AS P1 
+          LEFT OUTER JOIN product AS P2 
+            ON P1.sale_price >= P2.sale_price
+         ORDER BY P1.sale_price,P1.product_id ) AS X
+ GROUP BY product_id, product_name, sale_price
+ ORDER BY sale_price,product_id;
+```
+得到的查询结果为:  
+![image](https://user-images.githubusercontent.com/44680953/141337794-c541791a-0b04-428d-8c88-eba34f84deaf.png)  
+
+观察上述查询结果发现, 由于有两种商品的售价相同, 在使用 >= 进行连结时, 导致了累计求和错误, 这是由于这两种商品售价相同导致的. 因此实际上之前是不应该单独只用 >= 作为连结条件的. 考察我们建立自左连结的本意, 是要找出满足:1.比该商品售价更低的, 或者是 2.该种商品自身,以及 3.如果 A 和 B 两种商品售价相等,则建立连结时, 如果 P1.A 和 P2.A,P2.B 建立了连接, 则 P1.B 不再和 P2.A 建立连结, 因此根据上述约束条件, 利用 ID 的有序性, 进一步将上述查询改写为:  
+```SQL
+SELECT	product_id, product_name, sale_price
+       ,SUM(P2_price) AS cum_price 
+  FROM
+        (SELECT  P1.product_id, P1.product_name, P1.sale_price
+                ,P2.product_id AS P2_id
+                ,P2.product_name AS P2_name
+                ,P2.sale_price AS P2_price 
+           FROM product AS P1 
+           LEFT OUTER JOIN product AS P2 
+             ON ((P1.sale_price > P2.sale_price)
+             OR (P1.sale_price = P2.sale_price 
+            AND P1.product_id<=P2.product_id))
+	      ORDER BY P1.sale_price,P1.product_id) AS X
+ GROUP BY product_id, product_name, sale_price
+ ORDER BY sale_price,cum_price;
+```
+这次结果就正确了.  
+![image](https://user-images.githubusercontent.com/44680953/141337924-7e190178-43e8-495c-9aba-7e05daa2cd7f.png)  
+
 
 ## 交叉连结(CROSS JOIN)(笛卡尔积)
+之前的无论是外连结内连结, 一个共同的必备条件就是连结条件–ON 子句, 用来指定连结的条件. 如果你试过不使用这个连结条件的连结查询, 你可能已经发现, 结果会有很多行. 在连结去掉 ON 子句, 就是所谓的交叉连结(CROSS JOIN), 交叉连结又叫笛卡尔积, 后者是一个数学术语. 两个集合做笛卡尔积, 就是使用集合 A 中的每一个元素与集合 B 中的每一个元素组成一个有序的组合. 数据库表(或者子查询)的并,交和差都是在纵向上对表进行扩张或筛选限制等运算的, 这要求表的列数及对应位置的列的数据类型"相容", 因此这些运算并不会增加新的列, 而交叉连接(笛卡尔积)则是在横向上对表进行扩张, 即增加新的列, 这一点和连结的功能是一致的. 但因为没有了ON子句的限制, 会对左表和右表的每一行进行组合, 这经常会导致很多无意义的行出现在检索结果中. 当然, 在某些查询需求中, 交叉连结也有一些用处.  
+
+交叉连结的语法有如下几种形式:
+```SQL
+-- 1.使用关键字 CROSS JOIN 显式地进行交叉连结
+SELECT SP.shop_id
+       ,SP.shop_name
+       ,SP.product_id
+       ,P.product_name
+       ,P.sale_price
+  FROMshopproduct AS SP
+ CROSS JOINproduct AS P;
+--2.使用逗号分隔两个表,并省略 ON 子句
+SELECT SP.shop_id
+       ,SP.shop_name
+       ,SP.product_id
+       ,P.product_name
+       ,P.sale_price
+  FROMshopproduct AS SP ,product AS P;
+ ```
+ 
+对满足相同规则的表进行交叉连结的集合运算符是 CROSS JOIN （笛卡儿积）.进行交叉连结时无法使用内连结和外连结中所使用的ON 子句,这是因为交叉连结是对两张表中的全部记录进行交叉组合,因此结果中的记录数通常是两张表中行数的乘积.本例中,因为shopproduct 表存在 13 条记录,product 表存在 8 条记录,所以结果中就包含了 13 × 8 = 104 条记录.  
+
+集合运算中的乘法就是上面介绍的交叉连结. 内连结是交叉连结的一部分,“内”也可以理解为“包含在交叉连结结果中的部分”.相反,外连结的“外”可以理解为“交叉连结结果之外的部分”.  
+
+
 ### 连结与笛卡儿积的关系
+考察笛卡儿积和连结, 不难发现, 笛卡儿积可以视作一种特殊的连结(事实上笛卡儿积的语法也可以写作 CROSS JOIN), 这种连结的 ON 子句是一个恒为真的谓词.  
+
+反过来思考, 在对笛卡儿积进行适当的限制之后, 也就得到了内连结和外连结.  
+  
+例如, 对于 shopproduct 表和 product 表, 首先建立笛卡尔乘积:  
+```SQL
+SELECT SP.*, P.*
+  FROM shopproduct AS SP 
+ CROSS JOIN product AS P;
+```
+查询结果的一部分如下:  
+![image](https://user-images.githubusercontent.com/44680953/141338606-b0a466d6-f324-424d-841c-d62ecfb70e19.png)  
+
+然后对上述笛卡尔乘积增加筛选条件 SP.product_id=P.product_id, 就得到了和内连结一致的结果:
+```SQL
+SELECT SP.*, P.*
+  FROM shopproduct AS SP 
+ CROSS JOIN product AS P
+ WHERE SP.product_id = P.product_id;
+```
+
+查询结果如下:  
+![image](https://user-images.githubusercontent.com/44680953/141338685-08831643-6f63-4a6e-9d5a-51c9de7dd374.png)  
+
 
 ## 连结的特定语法和过时语法
-
+在笛卡尔积的基础上, 我们增加一个 WHERE 子句, 将之前的连结条件作为筛选条件加进去, 我们会发现, 得到的结果恰好是直接使用内连接的结果.  
+```SQL
+SELECT SP.shop_id
+      ,SP.shop_name
+      ,SP.product_id
+       ,P.product_name
+       ,P.sale_price
+  FROM shopproduct AS SP
+ CROSS JOINproduct AS P
+ WHERE SP.product_id = P.product_id;
+```
+上述写法中, 将 CROSS JOIN 改为逗号后, 正是内连结的旧式写法, 但在 ANSI 和 ISO 的 SQL-92 标准中, 已经将使用 INNER JION …ON… 的写法规定为标准写法, 因此极力推荐大家在平时写 SQL 查询时, 使用规范写法.
+```SQL
+SELECT SP.shop_id
+       ,SP.shop_name
+       ,SP.product_id
+       ,P.product_name
+       ,P.sale_price
+  FROM shopproduct SP,product P
+ WHERE SP.product_id = P.product_id
+   AND SP.shop_id = '000A';
+```
 
