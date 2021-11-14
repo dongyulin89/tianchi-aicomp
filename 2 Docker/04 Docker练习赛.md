@@ -57,7 +57,7 @@ vim run.sh
 #打印GPU信息
 nvidia-smi
 #执行math.py
-python3 math.py
+python3 main.py
 ```
 
 然后编写 Dockerfile 用于打包main.py和运行环境为镜像
@@ -67,14 +67,15 @@ vim Dockerfile
 
 ```shell
 # Base Images
-## 从天池基础镜像构建(from的base img 根据自己的需要更换，建议使用天池open list镜像链接：https://tianchi.aliyun.com/forum/postDetail?postId=67720)
-FROM registry.cn-shanghai.aliyuncs.com/tcc-public/pytorch:1.4-cuda10.1-py3
+## 从天池基础镜像构建(from的base img 根据自己的需要更换，建议使用天池open list镜像链接：registry.cn-shanghai.aliyuncs.com/tcc-public/pytorch:1.7-cuda11.0-py3
+
+
 
 ##安装依赖包,pip包请在requirements.txt添加
 #RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 ## 把当前文件夹里的文件构建到镜像的//workspace目录下,并设置为默认工作目录
-ADD math.py /workspace
+ADD main.py /workspace
 ADD run.sh /workspace
 WORKDIR /workspace
 
@@ -85,12 +86,12 @@ CMD ["sh", "run.sh"]
 命令行执行，构建镜像：   
 tips: 镜像命名根据自己申请的仓库 registry 来，可以省去tag步骤直接上传，保持本地镜像清洁
 ```shell
-$ docker build -t registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.1 .
+$ docker build -t registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.3 .
 ```
 
 上传镜像仓库
 ```shell
-$ docker push registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.1
+$ docker push registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.3
 ```
 
 天池页面提交     
