@@ -83,7 +83,7 @@ WORKDIR /workspace
 CMD ["sh", "run.sh"]
 ```
 
-命令行执行，构建镜像：   
+命令行执行，在本地构建镜像：   
 tips: 镜像命名根据自己申请的仓库 registry 来，可以省去tag步骤直接上传，保持本地镜像清洁
 ```shell
 $ docker build -t registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.3 .
@@ -120,7 +120,7 @@ tensor([[-1.3188, -0.2107,  0.8544],
         [-1.8344, -6.5420, -0.9610]], device='cuda:0')
 ```
 
-上传镜像仓库
+上传镜像至云端镜像仓库
 ```shell
 $ docker push registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.3
 ```
