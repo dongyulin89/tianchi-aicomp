@@ -145,5 +145,5 @@ docker tag registry.cn-shanghai.aliyuncs.com/test/pytorch:myversion my_tmp_versi
 
 ## 推送镜像到仓库
 ```shell
-docker tag registry.cn-shanghai.aliyuncs.com/test/pytorch:myversion my_tmp_version:0.1
+docker push registry.cn-shanghai.aliyuncs.com/test/pytorch:myversion
 ```
