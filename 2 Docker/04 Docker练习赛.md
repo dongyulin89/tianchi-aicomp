@@ -89,6 +89,37 @@ tips: 镜像命名根据自己申请的仓库 registry 来，可以省去tag步�
 $ docker build -t registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.3 .
 ```
 
+docker 在本地使用 gpu 进行调试
+```shell
+$ docker run --gpus all registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.3
+
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 460.91.03    Driver Version: 460.91.03    CUDA Version: 11.2     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla V100S-PCI...  Off  | 00000000:86:00.0 Off |                    0 |
+| N/A   67C    P0   207W / 250W |  24350MiB / 32510MiB |     75%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   1  Tesla V100S-PCI...  Off  | 00000000:AF:00.0 Off |                    0 |
+| N/A   37C    P0    52W / 250W |   2995MiB / 32510MiB |      0%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
++-----------------------------------------------------------------------------+
+tensor([[-1.3188, -0.2107,  0.8544],
+        [-4.4886, -2.5431,  1.7973],
+        [-1.8344, -6.5420, -0.9610]], device='cuda:0')
+```
+
 上传镜像仓库
 ```shell
 $ docker push registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.3
