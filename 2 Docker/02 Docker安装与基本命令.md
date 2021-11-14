@@ -150,7 +150,7 @@ docker tag registry.cn-shanghai.aliyuncs.com/test/pytorch:myversion my_tmp_versi
 
 ## 使用 dockerfile 构建镜像
 Dockerfile示例(注意一般文件名命名为Dockerfile 无后缀名，如果命名为其他名字，构建时需要额外指定文件名)
-```docker
+```shell
 # Base Images
 ## 从天池基础镜像构建(from的base img 根据自己的需要更换，建议使用天池open list镜像链接：https://tianchi.aliyun.com/forum/postDetail?postId=67720)
 FROM registry.cn-shanghai.aliyuncs.com/tcc-public/python:3
@@ -164,3 +164,49 @@ WORKDIR /
 ## 镜像启动后统一执行 sh run.sh
 CMD ["sh", "run.sh"]
 ```
+
+## 构建镜像
+```shell
+docker build -t registry.cn-shanghai.aliyuncs.com/target:test .
+```
+
+如要指定docker：
+```shell
+docker build -f ./dockerfile -t registry.cn-shanghai.aliyuncs.com/target:test .
+```
+
+## 删除容器/镜像
+删除镜像：
+```shell
+docker rmi registry.cn-shanghai.aliyuncs.com/target:test
+```
+
+删除容器：
+```shell
+docker rm [CONTAINER ID]
+```
+
+如果容器还在运行，则会删除失败，应该先结束掉容器：
+```shell
+docker kill [CONTAINER ID]
+```
+
+查看运行中的容器：
+```shell
+docker ps
+```
+
+查看所有容器：
+```shell
+docker ps -a 
+```
+
+## 常规技巧
+1. 检查基础镜像软件源和pip源是否替换为国内源，如果非国内源后续每次构建镜像会比较浪费时间。 
+2. 必备软件包可直接安装于基础镜像内，以减少每次构建镜像时都要安装一遍的等待时间。 
+3. 镜像面临调试问题时，可交互式进入容器后直接调试修改，直到成功后退出再在dockerfile中修改。 
+4. 养成使用Dockerfile的习惯，不要依赖于commit。
+5. 每次镜像修改都给定新的版本号或标签，方便区分版本管理，有意义的版本最好使用有含义的字符作为版本号，如：frist_submit
+
+## 深度学习常用镜像集合（包含国内源和海外源）
+[https://tianchi.aliyun.com/forum/postDetail?postId=67720](https://tianchi.aliyun.com/forum/postDetail?postId=67720)
