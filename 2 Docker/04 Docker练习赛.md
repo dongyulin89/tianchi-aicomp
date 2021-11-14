@@ -67,15 +67,15 @@ vim Dockerfile
 
 ```shell
 # Base Images
-## 从天池基础镜像构建(from的base img 根据自己的需要更换，建议使用天池open list镜像链接：registry.cn-shanghai.aliyuncs.com/tcc-public/pytorch:1.7-cuda11.0-py3
-
-
+## 从天池基础镜像构建(from的base img 根据自己的需要更换，建议使用天池open list镜像链接：https://tianchi.aliyun.com/forum/postDetail?postId=67720)
+## 天池用的cuda版本是10.1，所以镜像里面的cuda版本也要是10.1
+FROM registry.cn-shanghai.aliyuncs.com/tcc-public/pytorch:1.4-cuda10.1-py3
 
 ##安装依赖包,pip包请在requirements.txt添加
 #RUN pip install --no-cache-dir -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 ## 把当前文件夹里的文件构建到镜像的//workspace目录下,并设置为默认工作目录
-ADD main.py /workspace
+ADD math.py /workspace
 ADD run.sh /workspace
 WORKDIR /workspace
 
@@ -86,12 +86,12 @@ CMD ["sh", "run.sh"]
 命令行执行，在本地构建镜像：   
 tips: 镜像命名根据自己申请的仓库 registry 来，可以省去tag步骤直接上传，保持本地镜像清洁
 ```shell
-$ docker build -t registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.3 .
+$ docker build -t registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.4 .
 ```
 
 docker 在本地使用 gpu 进行调试
 ```shell
-$ docker run --gpus all registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.3
+$ docker run --gpus all registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.4
 
 +-----------------------------------------------------------------------------+
 | NVIDIA-SMI 460.91.03    Driver Version: 460.91.03    CUDA Version: 11.2     |
@@ -122,7 +122,7 @@ tensor([[-1.3188, -0.2107,  0.8544],
 
 上传镜像至云端镜像仓库
 ```shell
-$ docker push registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.3
+$ docker push registry.cn-hangzhou.aliyuncs.com/ldy_test_for_tianchi/ldy_test_for_tianchi_submit:0.4
 ```
 
 天池页面提交     
