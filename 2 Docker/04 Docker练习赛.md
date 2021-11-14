@@ -69,6 +69,7 @@ vim Dockerfile
 # Base Images
 ## 从天池基础镜像构建(from的base img 根据自己的需要更换，建议使用天池open list镜像链接：https://tianchi.aliyun.com/forum/postDetail?postId=67720)
 ## 天池用的cuda版本是10.1，所以镜像里面的cuda版本也要是10.1
+## cuda 向上兼容，本地的cuda硬件版本是11.0，安装cuda10.1以后，也是能用的
 FROM registry.cn-shanghai.aliyuncs.com/tcc-public/pytorch:1.4-cuda10.1-py3
 
 ##安装依赖包,pip包请在requirements.txt添加
