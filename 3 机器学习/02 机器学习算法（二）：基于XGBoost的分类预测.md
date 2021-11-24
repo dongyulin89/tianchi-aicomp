@@ -590,6 +590,212 @@ File:      /opt/conda/lib/python3.6/site-packages/seaborn/categorical.py
 Type:      function
 ```
 
+```python
+sns.barplot(y=data_features_part.columns, x=clf.feature_importances_)
+```
+<AxesSubplot:>
+![image](https://user-images.githubusercontent.com/44680953/143266187-7ac9a12f-39f9-46f3-ad96-cbe84ad48dd3.png)  
+从图中我们可以发现下午3点的湿度与今天是否下雨是决定第二天是否下雨最重要的因素；  
+
+除此之外，我们还可以使用XGBoost中的下列重要属性来评估特征的重要性：
+- weight:是以特征用到的次数来评价
+- gain:当利用特征做划分的时候的评价基尼指数
+- cover:利用一个覆盖样本的指标二阶导数（具体原理不清楚有待探究）平均值来划分。
+- total_gain:总基尼指数
+- total_cover:总覆盖
+```python
+from sklearn.metrics import accuracy_score
+from xgboost import plot_importance
+
+def estimate(model,data):
+
+    #sns.barplot(data.columns,model.feature_importances_)
+    ax1=plot_importance(model,importance_type="gain")
+    ax1.set_title('gain')
+    ax2=plot_importance(model, importance_type="weight")
+    ax2.set_title('weight')
+    ax3 = plot_importance(model, importance_type="cover")
+    ax3.set_title('cover')
+    plt.show()
+def classes(data,label,test):
+    model=XGBClassifier()
+    model.fit(data,label)
+    ans=model.predict(test)
+    estimate(model, data)
+    return ans
+ 
+ans=classes(x_train,y_train,x_test)
+pre=accuracy_score(y_test, ans)
+print('acc=',accuracy_score(y_test,ans))
+```
+![image](https://user-images.githubusercontent.com/44680953/143266450-d7927a7f-0866-4f2a-91f8-ed530b08e45a.png)
+![image](https://user-images.githubusercontent.com/44680953/143266468-89ec5efc-1442-465a-8c86-e03c89e5f409.png)
+![image](https://user-images.githubusercontent.com/44680953/143266509-dd1fe5ee-778e-437c-8a96-36b395ac68f7.png)  
+acc= 0.8469689155609733
+
+这些图同样可以帮助我们更好的了解其他重要特征。  
+
+### step8 通过调整参数获得更好的效果
+XGBoost中包括但不限于下列对模型影响较大的参数：
+1. learning_rate: 有时也叫作eta，系统默认值为0.3。每一步迭代的步长，很重要。太大了运行准确率不高，太小了运行速度慢。
+2. subsample：系统默认为1。这个参数控制对于每棵树，随机采样的比例。减小这个参数的值，算法会更加保守，避免过拟合, 取值范围零到一。
+3. colsample_bytree：系统默认值为1。我们一般设置成0.8左右。用来控制每棵随机采样的列数的占比(每一列是一个特征)。
+4. max_depth： 系统默认值为6，我们常用3-10之间的数字。这个值为树的最大深度。这个值是用来控制过拟合的。max_depth越大，模型学习的更加具体。
+
+调节模型参数的方法有**贪心算法**、**网格调参**、**贝叶斯调参**等。这里我们采用网格调参，它的基本思想是穷举搜索：在所有候选的参数选择中，通过循环遍历，尝试每一种可能性，表现最好的参数就是最终的结果。
+```python
+## 从sklearn库中导入网格调参函数
+from sklearn.model_selection import GridSearchCV
+
+## 定义参数取值范围
+learning_rate = [0.1, 0.3, 0.6]
+subsample = [0.8, 0.9]
+colsample_bytree = [0.6, 0.8]
+max_depth = [3,5,8]
+
+parameters = { 'learning_rate': learning_rate,
+              'subsample': subsample,
+              'colsample_bytree':colsample_bytree,
+              'max_depth': max_depth}
+model = XGBClassifier(n_estimators = 50)
+
+## 进行网格搜索
+clf = GridSearchCV(model, parameters, cv=3, scoring='accuracy',verbose=1,n_jobs=-1)
+clf = clf.fit(x_train, y_train)
+
+
+# Fitting 3 folds for each of 54 candidates, totalling 162 fits
+# [Parallel(n_jobs=-1)]: Using backend LokyBackend with 2 concurrent workers.
+# [Parallel(n_jobs=-1)]: Done  46 tasks      | elapsed:  1.1min
+# [Parallel(n_jobs=-1)]: Done 162 out of 162 | elapsed:  4.6min finished
+```
+
+```python
+## 网格搜索后的最好参数为
+clf.best_params_
+
+# {'colsample_bytree': 0.6,
+#  'learning_rate': 0.3,
+#  'max_depth': 8,
+#  'subsample': 0.9}
+```
+
+```python
+## 在训练集和测试集上分布利用最好的模型参数进行预测
+
+## 定义带参数的 XGBoost模型 
+clf = XGBClassifier(colsample_bytree = 0.6, learning_rate = 0.3, max_depth= 8, subsample = 0.9)
+# 在训练集上训练XGBoost模型
+clf.fit(x_train, y_train)
+
+train_predict = clf.predict(x_train)
+test_predict = clf.predict(x_test)
+
+## 利用accuracy（准确度）【预测正确的样本数目占总预测样本数目的比例】评估模型效果
+print('The accuracy of the Logistic Regression is:',metrics.accuracy_score(y_train,train_predict))
+print('The accuracy of the Logistic Regression is:',metrics.accuracy_score(y_test,test_predict))
+
+# The accuracy of the Logistic Regression is: 0.9414522651350876
+# The accuracy of the Logistic Regression is: 0.8569553190491819
+# The confusion matrix result:
+#  [[15614  2112]
+#  [  939  2664]]
+```
+
+```python
+## 查看混淆矩阵 (预测值和真实值的各类情况统计矩阵)
+confusion_matrix_result = metrics.confusion_matrix(test_predict,y_test)
+print('The confusion matrix result:\n',confusion_matrix_result)
+
+# 利用热力图对于结果进行可视化
+plt.figure(figsize=(8, 6))
+sns.heatmap(confusion_matrix_result, annot=True, cmap='Blues')
+plt.xlabel('Predicted labels')
+plt.ylabel('True labels')
+plt.show()
+```
+![image](https://user-images.githubusercontent.com/44680953/143267293-b07c91d9-e7ef-44e9-9f61-b081bec7c3c3.png)  
+原本有2470 + 790个错误，现在有 2112 + 939个错误，带来了明显的正确率提升。（黑人问号脸？？？）
 
 
 ## 重要知识点
+### XGBoost 的重要参数
+1.**eta**[默认0.3]    
+通过为每一颗树增加权重，提高模型的鲁棒性。   
+典型值为0.01-0.2。   
+
+2.**min_child_weight**[默认1]    
+决定最小叶子节点样本权重和。    
+这个参数可以避免过拟合。当它的值较大时，可以避免模型学习到局部的特殊样本。    
+但是如果这个值过高，则会导致模型拟合不充分。  
+
+3.**max_depth**[默认6]     
+这个值也是用来避免过拟合的。max_depth越大，模型会学到更具体更局部的样本。        
+典型值：3-10     
+
+4.**max_leaf_nodes**     
+树上最大的节点或叶子的数量。   
+可以替代max_depth的作用。     
+这个参数的定义会导致忽略max_depth参数。    
+
+5.**gamma**[默认0]      
+在节点分裂时，只有分裂后损失函数的值下降了，才会分裂这个节点。Gamma指定了节点分裂所需的最小损失函数下降值。
+这个参数的值越大，算法越保守。这个参数的值和损失函数息息相关。   
+
+6.**max_delta_step**[默认0]    
+这参数限制每棵树权重改变的最大步长。如果这个参数的值为0，那就意味着没有约束。如果它被赋予了某个正值，那么它会让这个算法更加保守。   
+但是当各类别的样本十分不平衡时，它对分类问题是很有帮助的。   
+
+7.**subsample**[默认1]     
+这个参数控制对于每棵树，随机采样的比例。   
+减小这个参数的值，算法会更加保守，避免过拟合。但是，如果这个值设置得过小，它可能会导致欠拟合。    
+典型值：0.5-1   
+  
+8.**colsample_bytree**[默认1]    
+用来控制每棵随机采样的列数的占比(每一列是一个特征)。   
+典型值：0.5-1   
+
+9.**colsample_bylevel**[默认1]   
+用来控制树的每一级的每一次分裂，对列数的采样的占比。   
+subsample参数和colsample_bytree参数可以起到相同的作用，一般用不到。
+
+10.**lambda**[默认1]    
+权重的L2正则化项。(和Ridge regression类似)。    
+这个参数是用来控制XGBoost的正则化部分的。虽然大部分数据科学家很少用到这个参数，但是这个参数在减少过拟合上还是可以挖掘出更多用处的。    
+
+11.**alpha**[默认1]    
+权重的L1正则化项。(和Lasso regression类似)。  
+可以应用在很高维度的情况下，使得算法的速度更快。     
+
+12.**scale_pos_weight**[默认1]    
+在各类别样本十分不平衡时，把这个参数设定为一个正值，可以使算法更快收敛。    
+
+### XGBoost 原理粗略讲解
+XGBoost底层实现了GBDT算法，并对GBDT算法做了一系列优化：
+1. 对目标函数进行了泰勒展示的二阶展开，可以更加高效拟合误差。
+2. 提出了一种估计分裂点的算法加速CART树的构建过程，同时可以处理稀疏数据。
+3. 提出了一种树的并行策略加速迭代。
+4. 为模型的分布式算法进行了底层优化。
+
+XGBoost是基于CART树的集成模型，它的思想是串联多个决策树模型共同进行决策。
+
+![image.png](attachment:image.png)
+
+那么如何串联呢？XGBoost采用迭代预测误差的方法串联。举个通俗的例子，我们现在需要预测一辆车价值3000元。我们构建决策树1训练后预测为2600元，我们发现有400元的误差，那么决策树2的训练目标为400元，但决策树2的预测结果为350元，还存在50元的误差就交给第三棵树……以此类推，每一颗树用来估计之前所有树的误差，最后所有树预测结果的求和就是最终预测结果！
+
+XGBoost的基模型是CART回归树，它有两个特点：（1）CART树，是一颗二叉树。（2）回归树，最后拟合结果是连续值。
+
+XGBoost模型可以表示为以下形式，我们约定$f_t(x)$表示前$t$颗树的和，$h_t(x)$表示第$t$颗决策树，模型定义如下：
+
+$f_{t}(x)=\sum_{t=1}^{T} h_{t}(x)$
+
+由于模型递归生成，第$t$步的模型由第$t-1$步的模型形成，可以写成：
+
+$f_{t}(x)=f_{t-1}(x)+h_{t}(x)$
+
+每次需要加上的树$h_t(x)$是之前树求和的误差：
+
+$r_{t, i}=y_{i}-f_{m-1}\left(x_{i}\right)$
+
+我们每一步只要拟合一颗输出为$r_{t,i}$的CART树加到$f_{t-1}(x)$就可以了。
+
