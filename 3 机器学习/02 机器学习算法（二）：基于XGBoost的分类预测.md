@@ -203,6 +203,393 @@ for col in data[numerical_features].columns:
         plt.show()
 ```
 ![image](https://user-images.githubusercontent.com/44680953/143263683-9cd5c5f5-590a-4b34-b01d-5e29d008dde6.png)
+![image](https://user-images.githubusercontent.com/44680953/143263883-9db57d30-c980-4ec0-86a0-f13826a8f6ad.png)
+![image](https://user-images.githubusercontent.com/44680953/143263899-20fcd8e2-991c-469f-8e25-7ecec7cc343c.png)
+![image](https://user-images.githubusercontent.com/44680953/143263926-4b1aa717-9332-418a-af06-e38195e7a487.png)
+![image](https://user-images.githubusercontent.com/44680953/143263943-2ecc2836-4f04-443a-bbac-8851d4161795.png)
+![image](https://user-images.githubusercontent.com/44680953/143263951-617d9704-f14d-4edc-8450-782de44db4c9.png)
+![image](https://user-images.githubusercontent.com/44680953/143263970-0c91fd8f-2fd9-4a68-8d2b-8ec7d1f682d5.png)
+![image](https://user-images.githubusercontent.com/44680953/143263980-7faf0cb3-cc88-4eea-b01c-3d70a2dfc0e9.png)
+![image](https://user-images.githubusercontent.com/44680953/143263989-d14f99a6-0a9c-4b59-a02d-e2b9eac7885e.png)
+![image](https://user-images.githubusercontent.com/44680953/143264006-c119ef24-c589-4b74-b3f7-e03ec8ba199f.png)
+![image](https://user-images.githubusercontent.com/44680953/143264024-a7f7423d-92cc-4418-94fd-c03d56e480aa.png)
+![image](https://user-images.githubusercontent.com/44680953/143264031-29934ce4-54f7-4ebf-98ce-02651695354c.png)
+![image](https://user-images.githubusercontent.com/44680953/143264047-579b2a7c-541a-47e2-bce9-03744ef43a34.png)
+![image](https://user-images.githubusercontent.com/44680953/143264068-355a7547-2992-40e9-b997-e7198af680d7.png)
+![image](https://user-images.githubusercontent.com/44680953/143264085-2b6e53c0-ca3c-4cdd-9468-87107aa9a0bd.png)
+![image](https://user-images.githubusercontent.com/44680953/143264092-6d8896f0-24b0-4885-ab3b-7d5b83017c37.png)  
+
+利用箱型图我们也可以得到不同类别在不同特征上的分布差异情况。我们可以发现Sunshine,Humidity3pm,Cloud9am,Cloud3pm的区分能力较强。
+
+```python
+tlog = {}
+for i in category_features:
+    tlog[i] = data[data['RainTomorrow'] == 'Yes'][i].value_counts()
+flog = {}
+for i in category_features:
+    flog[i] = data[data['RainTomorrow'] == 'No'][i].value_counts()
+
+plt.figure(figsize=(10,10))
+plt.subplot(1,2,1)
+plt.title('RainTomorrow')
+sns.barplot(x = pd.DataFrame(tlog['Location']).sort_index()['Location'], y = pd.DataFrame(tlog['Location']).sort_index().index, color = "red")
+plt.subplot(1,2,2)
+plt.title('Not RainTomorrow')
+sns.barplot(x = pd.DataFrame(flog['Location']).sort_index()['Location'], y = pd.DataFrame(flog['Location']).sort_index().index, color = "blue")
+plt.show()
+```
+![image](https://user-images.githubusercontent.com/44680953/143264423-3b80900c-0059-4813-907c-dd3d87d8537c.png)  
+从上图可以发现不同地区降雨情况差别很大，有些地方明显更容易降雨。
+
+```python
+plt.figure(figsize=(10,2))
+plt.subplot(1,2,1)
+plt.title('RainTomorrow')
+sns.barplot(x = pd.DataFrame(tlog['RainToday'][:2]).sort_index()['RainToday'], y = pd.DataFrame(tlog['RainToday'][:2]).sort_index().index, color = "red")
+plt.subplot(1,2,2)
+plt.title('Not RainTomorrow')
+sns.barplot(x = pd.DataFrame(flog['RainToday'][:2]).sort_index()['RainToday'], y = pd.DataFrame(flog['RainToday'][:2]).sort_index().index, color = "blue")
+plt.show()
+```
+![image](https://user-images.githubusercontent.com/44680953/143264559-ac0274be-deda-451a-8479-5cf8d7fe9f93.png)  
+上图我们可以发现，今天下雨明天不一定下雨，但今天不下雨，第二天大概率也不下雨。
+
+### step5 对离散变量进行编码
+由于XGBoost无法处理字符串类型的数据，我们需要一些方法将字符串数据转化为数据。一种最简单的方法是把所有的相同类别的特征编码成同一个值，例如女=0，男=1，狗狗=2，所以最后编码的特征值是在$[0, 特征数量-1]$之间的整数。除此之外，还有**独热编码**、**求和编码**、**留一法编码**等等方法可以获得更好的效果。  
+```python
+## 把所有的相同类别的特征编码为同一个值
+def get_mapfunction(x):
+    mapp = dict(zip(x.unique().tolist(),
+         range(len(x.unique().tolist()))))
+    def mapfunction(y):
+        if y in mapp:
+            return mapp[y]
+        else:
+            return -1
+    return mapfunction
+for i in category_features:
+    data[i] = data[i].apply(get_mapfunction(data[i]))
+    
+## 编码后的字符串特征变成了数字
+data['Location'].unique()
+
+# array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
+#        17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33,
+#        34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48])
+```
+
+### step6 利用 XGBoost 进行训练与预测
+```python
+## 为了正确评估模型性能，将数据划分为训练集和测试集，并在训练集上训练模型，在测试集上验证模型性能。
+from sklearn.model_selection import train_test_split
+
+## 选择其类别为0和1的样本 （不包括类别为2的样本）
+data_target_part = data['RainTomorrow']
+data_features_part = data[[x for x in data.columns if x != 'RainTomorrow']]
+
+## 测试集大小为20%， 80%/20%分
+x_train, x_test, y_train, y_test = train_test_split(data_features_part, data_target_part, test_size = 0.2, random_state = 2020)
+```
+
+```python
+## 导入XGBoost模型
+from xgboost.sklearn import XGBClassifier
+
+## 定义 XGBoost模型 
+clf = XGBClassifier()
+
+# 在训练集上训练XGBoost模型
+clf.fit(x_train, y_train)
+
+# XGBClassifier()
+```
+
+```python
+## 在训练集和测试集上分布利用训练好的模型进行预测
+train_predict = clf.predict(x_train)
+test_predict = clf.predict(x_test)
+from sklearn import metrics
+
+## 利用accuracy（准确度）【预测正确的样本数目占总预测样本数目的比例】评估模型效果
+print('The accuracy of the Logistic Regression is:',metrics.accuracy_score(y_train,train_predict))
+print('The accuracy of the Logistic Regression is:',metrics.accuracy_score(y_test,test_predict))
+
+## 查看混淆矩阵 (预测值和真实值的各类情况统计矩阵)
+confusion_matrix_result = metrics.confusion_matrix(test_predict,y_test)
+print('The confusion matrix result:\n',confusion_matrix_result)
+
+# The accuracy of the Logistic Regression is: 0.8517142354802789
+# The accuracy of the Logistic Regression is: 0.8469689155609733
+# The confusion matrix result:
+#  [[15759  2470]
+#  [  794  2306]]
+```
+
+```python
+# 利用热力图对于结果进行可视化
+plt.figure(figsize=(8, 6))
+sns.heatmap(confusion_matrix_result, annot=True, cmap='Blues')
+plt.xlabel('Predicted labels')
+plt.ylabel('True labels')
+plt.show()
+```
+![image](https://user-images.githubusercontent.com/44680953/143265585-c63310e3-1c96-46ba-8b85-86eb4be00a48.png)   
+我们可以发现共有15759 + 2306个样本预测正确，2470 + 794个样本预测错误。
+
+### step7 利用 XGBoost 进行特征选择
+XGBoost的特征选择属于特征选择中的嵌入式方法，在XGboost中可以用属性feature_importances_去查看特征的重要度。
+```shell
+? sns.barplot
+
+############# output
+Signature:
+ sns.barplot(
+    x=None,
+    y=None,
+    hue=None,
+    data=None,
+    order=None,
+    hue_order=None,
+    estimator=<function mean at 0x7f5030185950>,
+    ci=95,
+    n_boot=1000,
+    units=None,
+    seed=None,
+    orient=None,
+    color=None,
+    palette=None,
+    saturation=0.75,
+    errcolor='.26',
+    errwidth=None,
+    capsize=None,
+    dodge=True,
+    ax=None,
+    **kwargs,
+)
+Docstring:
+Show point estimates and confidence intervals as rectangular bars.
+
+A bar plot represents an estimate of central tendency for a numeric
+variable with the height of each rectangle and provides some indication of
+the uncertainty around that estimate using error bars. Bar plots include 0
+in the quantitative axis range, and they are a good choice when 0 is a
+meaningful value for the quantitative variable, and you want to make
+comparisons against it.
+
+For datasets where 0 is not a meaningful value, a point plot will allow you
+to focus on differences between levels of one or more categorical
+variables.
+
+It is also important to keep in mind that a bar plot shows only the mean
+(or other estimator) value, but in many cases it may be more informative to
+show the distribution of values at each level of the categorical variables.
+In that case, other approaches such as a box or violin plot may be more
+appropriate.
+
+
+Input data can be passed in a variety of formats, including:
+
+- Vectors of data represented as lists, numpy arrays, or pandas Series
+  objects passed directly to the ``x``, ``y``, and/or ``hue`` parameters.
+- A "long-form" DataFrame, in which case the ``x``, ``y``, and ``hue``
+  variables will determine how the data are plotted.
+- A "wide-form" DataFrame, such that each numeric column will be plotted.
+- An array or list of vectors.
+
+In most cases, it is possible to use numpy or Python objects, but pandas
+objects are preferable because the associated names will be used to
+annotate the axes. Additionally, you can use Categorical types for the
+grouping variables to control the order of plot elements.    
+
+This function always treats one of the variables as categorical and
+draws data at ordinal positions (0, 1, ... n) on the relevant axis, even
+when the data has a numeric or date type.
+
+See the :ref:`tutorial <categorical_tutorial>` for more information.    
+
+Parameters
+----------
+x, y, hue : names of variables in ``data`` or vector data, optional
+    Inputs for plotting long-form data. See examples for interpretation.        
+data : DataFrame, array, or list of arrays, optional
+    Dataset for plotting. If ``x`` and ``y`` are absent, this is
+    interpreted as wide-form. Otherwise it is expected to be long-form.    
+order, hue_order : lists of strings, optional
+    Order to plot the categorical levels in, otherwise the levels are
+    inferred from the data objects.        
+estimator : callable that maps vector -> scalar, optional
+    Statistical function to estimate within each categorical bin.
+ci : float or "sd" or None, optional
+    Size of confidence intervals to draw around estimated values.  If
+    "sd", skip bootstrapping and draw the standard deviation of the
+    observations. If ``None``, no bootstrapping will be performed, and
+    error bars will not be drawn.
+n_boot : int, optional
+    Number of bootstrap iterations to use when computing confidence
+    intervals.
+units : name of variable in ``data`` or vector data, optional
+    Identifier of sampling units, which will be used to perform a
+    multilevel bootstrap and account for repeated measures design.
+seed : int, numpy.random.Generator, or numpy.random.RandomState, optional
+    Seed or random number generator for reproducible bootstrapping.    
+orient : "v" | "h", optional
+    Orientation of the plot (vertical or horizontal). This is usually
+    inferred from the dtype of the input variables, but can be used to
+    specify when the "categorical" variable is a numeric or when plotting
+    wide-form data.    
+color : matplotlib color, optional
+    Color for all of the elements, or seed for a gradient palette.    
+palette : palette name, list, or dict, optional
+    Colors to use for the different levels of the ``hue`` variable. Should
+    be something that can be interpreted by :func:`color_palette`, or a
+    dictionary mapping hue levels to matplotlib colors.    
+saturation : float, optional
+    Proportion of the original saturation to draw colors at. Large patches
+    often look better with slightly desaturated colors, but set this to
+    ``1`` if you want the plot colors to perfectly match the input color
+    spec.    
+errcolor : matplotlib color
+    Color for the lines that represent the confidence interval.
+errwidth : float, optional
+    Thickness of error bar lines (and caps).         
+capsize : float, optional
+    Width of the "caps" on error bars.
+
+dodge : bool, optional
+    When hue nesting is used, whether elements should be shifted along the
+    categorical axis.    
+ax : matplotlib Axes, optional
+    Axes object to draw the plot onto, otherwise uses the current Axes.    
+kwargs : key, value mappings
+    Other keyword arguments are passed through to
+    :meth:`matplotlib.axes.Axes.bar`.
+
+Returns
+-------
+ax : matplotlib Axes
+    Returns the Axes object with the plot drawn onto it.    
+
+See Also
+--------
+countplot : Show the counts of observations in each categorical bin.    
+pointplot : Show point estimates and confidence intervals using scatterplot
+            glyphs.    
+catplot : Combine a categorical plot with a :class:`FacetGrid`.    
+
+Examples
+--------
+
+Draw a set of vertical bar plots grouped by a categorical variable:
+
+.. plot::
+    :context: close-figs
+
+    >>> import seaborn as sns
+    >>> sns.set(style="whitegrid")
+    >>> tips = sns.load_dataset("tips")
+    >>> ax = sns.barplot(x="day", y="total_bill", data=tips)
+
+Draw a set of vertical bars with nested grouping by a two variables:
+
+.. plot::
+    :context: close-figs
+
+    >>> ax = sns.barplot(x="day", y="total_bill", hue="sex", data=tips)
+
+Draw a set of horizontal bars:
+
+.. plot::
+    :context: close-figs
+
+    >>> ax = sns.barplot(x="tip", y="day", data=tips)
+
+Control bar order by passing an explicit order:
+
+.. plot::
+    :context: close-figs
+
+    >>> ax = sns.barplot(x="time", y="tip", data=tips,
+    ...                  order=["Dinner", "Lunch"])
+
+Use median as the estimate of central tendency:
+
+.. plot::
+    :context: close-figs
+
+    >>> from numpy import median
+    >>> ax = sns.barplot(x="day", y="tip", data=tips, estimator=median)
+
+Show the standard error of the mean with the error bars:
+
+.. plot::
+    :context: close-figs
+
+    >>> ax = sns.barplot(x="day", y="tip", data=tips, ci=68)
+
+Show standard deviation of observations instead of a confidence interval:
+
+.. plot::
+    :context: close-figs
+
+    >>> ax = sns.barplot(x="day", y="tip", data=tips, ci="sd")
+
+Add "caps" to the error bars:
+
+.. plot::
+    :context: close-figs
+
+    >>> ax = sns.barplot(x="day", y="tip", data=tips, capsize=.2)
+
+Use a different color palette for the bars:
+
+.. plot::
+    :context: close-figs
+
+    >>> ax = sns.barplot("size", y="total_bill", data=tips,
+    ...                  palette="Blues_d")
+
+Use ``hue`` without changing bar position or width:
+
+.. plot::
+    :context: close-figs
+
+    >>> tips["weekend"] = tips["day"].isin(["Sat", "Sun"])
+    >>> ax = sns.barplot(x="day", y="total_bill", hue="weekend",
+    ...                  data=tips, dodge=False)
+
+Plot all bars in a single color:
+
+.. plot::
+    :context: close-figs
+
+    >>> ax = sns.barplot("size", y="total_bill", data=tips,
+    ...                  color="salmon", saturation=.5)
+
+Use :meth:`matplotlib.axes.Axes.bar` parameters to control the style.
+
+.. plot::
+    :context: close-figs
+
+    >>> ax = sns.barplot("day", "total_bill", data=tips,
+    ...                  linewidth=2.5, facecolor=(1, 1, 1, 0),
+    ...                  errcolor=".2", edgecolor=".2")
+
+Use :func:`catplot` to combine a :func:`barplot` and a :class:`FacetGrid`.
+This allows grouping within additional categorical variables. Using
+:func:`catplot` is safer than using :class:`FacetGrid` directly, as it
+ensures synchronization of variable order across facets:
+
+.. plot::
+    :context: close-figs
+
+    >>> g = sns.catplot(x="sex", y="total_bill",
+    ...                 hue="smoker", col="time",
+    ...                 data=tips, kind="bar",
+    ...                 height=4, aspect=.7);
+File:      /opt/conda/lib/python3.6/site-packages/seaborn/categorical.py
+Type:      function
+```
+
 
 
 ## 重要知识点
