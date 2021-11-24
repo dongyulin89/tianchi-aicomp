@@ -37,7 +37,14 @@ See 'docker run --help'.
 > sudo gpasswd -a $USER docker
 > newgrp docker
 > ```
-> 参考资料：[link](https://blog.csdn.net/liangllhahaha/article/details/92077065)
+> 参考资料：[link](https://blog.csdn.net/liangllhahaha/article/details/92077065)  
+> 
+> 如果普通用户执行docker命令，如果提示get …… dial unix /var/run/docker.sock权限不够，则修改/var/run/docker.sock权限
+> 使用root用户执行如下命令，即可
+> ```shell
+> sudo chmod a+rw /var/run/docker.sock
+> ```
+> 参考资料：[link](https://www.firegod.cn/docker/docker-%e7%bb%84%e6%b7%bb%e5%8a%a0%e7%94%a8%e6%88%b7%ef%bc%8c%e8%ae%be%e7%bd%ae%e5%85%81%e8%ae%b8%e6%99%ae%e9%80%9a%e7%94%a8%e6%88%b7%e6%93%8d%e4%bd%9c-docker/)
 
 如果机器有支持深度学习的GPU，可以继续执行如下命令以支持容器对gpu的调用[目前仅支持linux]：
 ```shell
