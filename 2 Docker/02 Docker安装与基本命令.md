@@ -33,8 +33,7 @@ See 'docker run --help'.
 > 解决方案：
 > ```shell
 > sudo groupadd docker
-> sudo gpasswd -a $ldy docker
-> sudo gpasswd -a $USER docker
+> sudo gpasswd -a ldy docker
 > newgrp docker
 > ```
 > 参考资料：[link](https://blog.csdn.net/liangllhahaha/article/details/92077065)  
